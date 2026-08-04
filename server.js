@@ -21,12 +21,15 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 // =============================================================
+// TRUST PROXY (Railway runs behind a proxy)
+// =============================================================
+app.set('trust proxy', 1);
+
+// =============================================================
 // MIDDLEWARE
 // =============================================================
-
-// CORS – allow the Railway origin dynamically
 app.use(cors({
-  origin: true, // allows any origin (you can restrict later)
+  origin: true,  // allow any origin, but we will rely on same-origin
   credentials: true
 }));
 
@@ -40,23 +43,25 @@ if (!fs.existsSync(publicPath)) {
 }
 app.use(express.static(publicPath));
 
-// Session – secure only in production, but we want it to work on Railway with HTTPS
+// Session – adjusted for production on Railway
 app.use(session({
   secret: process.env.SESSION_SECRET || 'dev-secret-key-change-me',
   resave: false,
   saveUninitialized: false,
   cookie: {
+    // In production, secure should be true (HTTPS), but we can also set it based on environment
     secure: process.env.NODE_ENV === 'production' ? true : false,
     maxAge: 24 * 60 * 60 * 1000,
-    sameSite: 'lax'
+    sameSite: 'lax',  // allows cross-origin requests from same domain
+    httpOnly: true
   }
 }));
 
 // =============================================================
-// LOGGING MIDDLEWARE (to see all requests)
+// LOGGING MIDDLEWARE
 // =============================================================
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path} - ${req.session?.userId || 'not authenticated'}`);
+  console.log(`${req.method} ${req.path} - SessionID: ${req.session?.id || 'none'}, User: ${req.session?.userId || 'guest'}`);
   next();
 });
 
@@ -113,15 +118,17 @@ app.post('/api/login', async (req, res) => {
         return res.status(401).json({ error: 'Invalid username or password' });
       }
 
+      // Set session
       req.session.userId = user.id;
       req.session.username = user.username;
 
-      // Save session explicitly to ensure it persists
+      // Save session explicitly
       req.session.save((err) => {
         if (err) {
           console.error('Session save error:', err);
           return res.status(500).json({ error: 'Failed to save session' });
         }
+        console.log('✅ Login successful for:', username);
         res.json({
           success: true,
           user: { id: user.id, username: user.username }
@@ -154,6 +161,7 @@ app.get('/api/session', (req, res) => {
 });
 
 app.post('/api/change-password', isAuthenticated, async (req, res) => {
+  // ... (unchanged, same as before)
   try {
     const { currentPassword, newPassword } = req.body;
     if (!currentPassword || !newPassword) {
@@ -193,7 +201,6 @@ app.post('/api/change-password', isAuthenticated, async (req, res) => {
 app.get('/api/data', isAuthenticated, (req, res) => {
   console.log('🔐 Fetching data for user:', req.session.username);
 
-  // First, check DB connectivity
   db.get('SELECT 1', (err) => {
     if (err) {
       console.error('❌ Database not accessible:', err);
@@ -277,6 +284,7 @@ app.get('/api/data', isAuthenticated, (req, res) => {
   });
 });
 
+// POST /api/data (unchanged, but included for completeness)
 app.post('/api/data', isAuthenticated, (req, res) => {
   const data = req.body;
   if (!data.years || !data.descriptions || !data.circulars) {
@@ -367,15 +375,7 @@ app.post('/api/config/basePath', isAuthenticated, (req, res) => {
 });
 
 // =============================================================
-// ERROR HANDLING MIDDLEWARE (catch-all)
-// =============================================================
-app.use((err, req, res, next) => {
-  console.error('❌ Unhandled error:', err);
-  res.status(500).json({ error: 'Internal server error' });
-});
-
-// =============================================================
-// FALLBACK ROUTE – serve index.html
+// FALLBACK ROUTE
 // =============================================================
 app.get('*', (req, res) => {
   if (req.path.startsWith('/api/')) {
@@ -385,7 +385,7 @@ app.get('*', (req, res) => {
   if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);
   } else {
-    res.status(500).send('index.html not found in public folder. Please check your deployment.');
+    res.status(500).send('index.html not found');
   }
 });
 
