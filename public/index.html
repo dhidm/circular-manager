@@ -2472,7 +2472,7 @@
                                         return `<span class="circular-link" style="opacity:0.5;cursor:default;background:transparent;">${num}</span>`;
                                     }
                                     const multiClass = nums.length > 1 ? 'multiple' : '';
-                                    const fileClass = hasFile ? 'has-file' : '';
+                                    const fileClass = hasFile && href !== '#' ? 'has-file' : '';
                                     return `<a href="${href}" target="_blank" class="circular-link ${multiClass} ${fileClass}" 
                                               onclick="event.preventDefault(); openCircular('${y}', '${d.id}', '${num}');">
                                               ${num}
