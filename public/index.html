@@ -2317,21 +2317,27 @@
                 if (!rawPath || rawPath.trim() === '') return null;
                 let path = rawPath.trim();
                 path = path.replace(/\\/g, '/');
-                if (!/^[a-zA-Z]:[\/\\]/.test(path) && !/^\/[^\/]/.test(path) && !/^https?:\/\//.test(path) && !/^file:\/\//.test(path)) {
-                    if (basePath) {
-                        let base = basePath.trim().replace(/\\/g, '/');
-                        if (!base.endsWith('/')) base += '/';
-                        path = base + path;
-                    }
+                // If it's already an absolute HTTP/HTTPS URL, return it as is
+                if (/^https?:\/\//.test(path)) {
+                    return path;
                 }
+                // If it's an absolute path (starts with drive letter), prepend file:///
                 if (/^[a-zA-Z]:[\/\\]/.test(path)) {
-                    path = 'file:///' + path;
-                } else if (/^\/\/[^\/]/.test(path)) {
-                    path = 'file:' + path;
+                    return 'file:///' + path;
                 }
-                return path;
+                // If it's an absolute path (starts with /), keep it as is (relative to server root)
+                if (/^\//.test(path)) {
+                    return path;
+                }
+                // If it's a relative path, prepend basePath if available
+                if (basePath) {
+                    let base = basePath.trim().replace(/\\/g, '/');
+                    if (!base.endsWith('/')) base += '/';
+                    return base + path;
+                }
+                // No basePath set, and not a full URL -> cannot resolve
+                return null;
             }
-
             // =============================================================
             // RENDER TABLE
             // =============================================================
@@ -2453,10 +2459,17 @@
                                             hasFile = true;
                                         }
                                     }
-                                    if (!hasFile) {
+                                    if (!hasFile && basePath) {
                                         const rel = `circulars/${y}/${num}.pdf`;
-                                        const full = normalizeFilePathToUrl(rel, basePath);
-                                        href = full || rel;
+                                        const url = normalizeFilePathToUrl(rel, basePath);
+                                        if (url){
+                                            href = url;
+                                            hasFile = true;
+                                        }
+                                    }
+                                        // If we still don't have a file, show as plain text (non-clickable)
+                                    if (!hasFile) {
+                                        return `<span class="circular-link" style="opacity:0.5;cursor:default;background:transparent;">${num}</span>`;
                                     }
                                     const multiClass = nums.length > 1 ? 'multiple' : '';
                                     const fileClass = hasFile ? 'has-file' : '';
@@ -2510,12 +2523,10 @@
                         }
                     }
 
-                    if (url === '#') {
-                        const rel = `circulars/${year}/${num}.pdf`;
-                        const full = normalizeFilePathToUrl(rel, basePath);
-                        url = full || rel;
+                    if (url === '#'|| !url || url === '') {
+                        showToast('Unable to open circular. Please ensure the file exists.', 'warning');
+                        return;
                     }
-
                     const win = window.open(url, '_blank');
                     if (!win || win.closed) {
                         showToast('Unable to open circular. Please ensure the file exists.', 'warning');
