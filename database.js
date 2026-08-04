@@ -2,11 +2,12 @@ const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const bcrypt = require('bcrypt');
 
-const db = new sqlite3.Database(path.join(__dirname, 'circular.db'));
+// Use persistent volume if available (Railway) or local file
+const dbPath = process.env.DB_PATH || path.join(__dirname, 'circular.db');
+const db = new sqlite3.Database(dbPath);
 
 // Initialize tables
 db.serialize(() => {
-  // Users table (for authentication)
   db.run(`CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL,
@@ -14,20 +15,17 @@ db.serialize(() => {
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`);
 
-  // Years table
   db.run(`CREATE TABLE IF NOT EXISTS years (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT UNIQUE
   )`);
 
-  // Descriptions table
   db.run(`CREATE TABLE IF NOT EXISTS descriptions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     description TEXT,
     category TEXT
   )`);
 
-  // Circulars table
   db.run(`CREATE TABLE IF NOT EXISTS circulars (
     year_id INTEGER,
     desc_id INTEGER,
@@ -37,7 +35,6 @@ db.serialize(() => {
     PRIMARY KEY(year_id, desc_id)
   )`);
 
-  // Files table
   db.run(`CREATE TABLE IF NOT EXISTS files (
     year_id INTEGER,
     desc_id INTEGER,
@@ -49,14 +46,12 @@ db.serialize(() => {
     PRIMARY KEY(year_id, desc_id, circular_number)
   )`);
 
-  // Notes table
   db.run(`CREATE TABLE IF NOT EXISTS notes (
     desc_id INTEGER PRIMARY KEY,
     note TEXT,
     FOREIGN KEY(desc_id) REFERENCES descriptions(id)
   )`);
 
-  // Config table
   db.run(`CREATE TABLE IF NOT EXISTS config (
     key TEXT PRIMARY KEY,
     value TEXT

@@ -3,27 +3,48 @@ const cors = require('cors');
 const session = require('express-session');
 const bcrypt = require('bcrypt');
 const db = require('./database');
+const path = require('path');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
+
+// =============================================================
+// MIDDLEWARE
+// =============================================================
 
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: process.env.NODE_ENV === 'production' 
+    ? ['https://your-app.onrender.com', 'https://your-app.up.railway.app'] 
+    : 'http://localhost:3000',
   credentials: true
 }));
+
+// Increase payload limit for file uploads (base64 fallback)
 app.use(express.json({ limit: '50mb' }));
 app.use(express.static('public'));
 
 // Session configuration
 app.use(session({
-  secret: 'your-secret-key-change-this-in-production',
+  secret: process.env.SESSION_SECRET || 'dev-secret-key-change-me',
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: false, // set to true if using HTTPS
+    secure: process.env.NODE_ENV === 'production',
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
 }));
+
+// =============================================================
+// SUPABASE CONFIG ENDPOINT (for frontend)
+// =============================================================
+
+app.get('/api/supabase-config', (req, res) => {
+  res.json({
+    url: process.env.SUPABASE_URL || '',
+    anonKey: process.env.SUPABASE_ANON_KEY || '',
+    bucket: process.env.SUPABASE_BUCKET || 'circulars'
+  });
+});
 
 // =============================================================
 // AUTHENTICATION MIDDLEWARE
@@ -40,7 +61,6 @@ function isAuthenticated(req, res, next) {
 // AUTH ENDPOINTS
 // =============================================================
 
-// Login
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
@@ -60,7 +80,6 @@ app.post('/api/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid username or password' });
     }
 
-    // Set session
     req.session.userId = user.id;
     req.session.username = user.username;
 
@@ -71,7 +90,6 @@ app.post('/api/login', async (req, res) => {
   });
 });
 
-// Logout
 app.post('/api/logout', (req, res) => {
   req.session.destroy((err) => {
     if (err) {
@@ -82,7 +100,6 @@ app.post('/api/logout', (req, res) => {
   });
 });
 
-// Check session
 app.get('/api/session', (req, res) => {
   if (req.session && req.session.userId) {
     res.json({ 
@@ -94,7 +111,6 @@ app.get('/api/session', (req, res) => {
   }
 });
 
-// Change password (authenticated)
 app.post('/api/change-password', isAuthenticated, async (req, res) => {
   const { currentPassword, newPassword } = req.body;
   if (!currentPassword || !newPassword) {
@@ -128,7 +144,6 @@ app.post('/api/change-password', isAuthenticated, async (req, res) => {
 // DATA ENDPOINTS (Protected)
 // =============================================================
 
-// GET all data
 app.get('/api/data', isAuthenticated, (req, res) => {
   db.all(`SELECT name FROM years ORDER BY name`, (err, years) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -190,7 +205,6 @@ app.get('/api/data', isAuthenticated, (req, res) => {
   });
 });
 
-// POST /api/data (replace all data)
 app.post('/api/data', isAuthenticated, (req, res) => {
   const data = req.body;
   if (!data.years || !data.descriptions || !data.circulars) {
@@ -272,7 +286,6 @@ app.post('/api/data', isAuthenticated, (req, res) => {
   });
 });
 
-// Update basePath
 app.post('/api/config/basePath', isAuthenticated, (req, res) => {
   const { basePath } = req.body;
   db.run(`INSERT OR REPLACE INTO config (key, value) VALUES ('basePath', ?)`, [basePath], function(err) {
@@ -283,7 +296,11 @@ app.post('/api/config/basePath', isAuthenticated, (req, res) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
-  console.log('🔐 Default login: admin / admin123');
-  console.log('📂 Open your browser and go to http://localhost:3000');
+  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`🔐 Default login: admin / admin123`);
+  if (process.env.SUPABASE_URL) {
+    console.log(`☁️  Supabase Storage enabled`);
+  } else {
+    console.log(`💾 Supabase not configured – using local file paths`);
+  }
 });
