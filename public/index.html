@@ -1,1 +1,3520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Madeeasy — Circular Management</title>
 
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+
+    <!-- Supabase JS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        /* ===== RESET & BASE ===== */
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --navy: #0b1a33;
+            --navy-light: #1a2f4f;
+            --gold: #d4a853;
+            --gold-light: #e8c97a;
+            --white: #ffffff;
+            --off-white: #f8f6f2;
+            --gray: #6b7a8f;
+            --light-gray: #e9ecef;
+            --shadow: 0 8px 30px rgba(11, 26, 51, 0.10);
+            --radius: 12px;
+            --transition: 0.3s ease;
+            --danger: #d9534f;
+            --success: #5cb85c;
+            --warning: #f0ad4e;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--off-white);
+            color: var(--navy);
+            line-height: 1.6;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        ul {
+            list-style: none;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* ===== BUTTONS ===== */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 24px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+            letter-spacing: 0.3px;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: var(--gold);
+            color: var(--navy);
+        }
+        .btn-primary:hover {
+            background: var(--gold-light);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(212, 168, 83, 0.35);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--navy);
+            border: 2px solid var(--navy);
+        }
+        .btn-outline:hover {
+            background: var(--navy);
+            color: var(--white);
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: var(--white);
+        }
+        .btn-danger:hover {
+            background: #c9302c;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: var(--white);
+        }
+        .btn-success:hover {
+            background: #449d44;
+            transform: translateY(-2px);
+        }
+
+        .btn-sm {
+            padding: 6px 14px;
+            font-size: 0.8rem;
+        }
+        .btn-xs {
+            padding: 4px 10px;
+            font-size: 0.7rem;
+            border-radius: 30px;
+        }
+
+        /* ===== LOGIN SCREEN ===== */
+        #loginScreen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--navy);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+        }
+        #loginScreen.active {
+            display: flex;
+        }
+
+        .login-box {
+            background: var(--white);
+            padding: 40px;
+            border-radius: var(--radius);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            max-width: 400px;
+            width: 100%;
+        }
+        .login-box .logo-large {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 8px;
+            color: var(--navy);
+        }
+        .login-box .logo-large span {
+            color: var(--gold);
+        }
+        .login-box .subtitle {
+            text-align: center;
+            color: var(--gray);
+            margin-bottom: 30px;
+            font-size: 0.9rem;
+        }
+        .login-box .form-group {
+            margin-bottom: 16px;
+        }
+        .login-box .form-group label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+        }
+        .login-box .form-group input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid var(--light-gray);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-family: inherit;
+            transition: var(--transition);
+            background: var(--off-white);
+        }
+        .login-box .form-group input:focus {
+            outline: none;
+            border-color: var(--gold);
+            background: var(--white);
+        }
+        .login-box .btn {
+            width: 100%;
+            justify-content: center;
+            padding: 12px;
+            font-size: 1rem;
+            margin-top: 8px;
+        }
+        .login-box .error-msg {
+            color: var(--danger);
+            font-size: 0.85rem;
+            text-align: center;
+            margin-top: 10px;
+            min-height: 24px;
+        }
+        .login-box .footer-text {
+            text-align: center;
+            margin-top: 16px;
+            font-size: 0.8rem;
+            color: var(--gray);
+        }
+
+        /* ===== HEADER ===== */
+        header {
+            position: sticky;
+            top: 0;
+            background: rgba(11, 26, 51, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 1000;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .nav-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--white);
+            letter-spacing: -0.5px;
+        }
+        .logo i {
+            color: var(--gold);
+            font-size: 1.6rem;
+        }
+        .logo span {
+            color: var(--gold);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .nav-links a {
+            color: rgba(255, 255, 255, 0.75);
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: var(--transition);
+            padding: 6px 0;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-links a:hover {
+            color: var(--white);
+            border-bottom-color: var(--gold);
+        }
+        .nav-links a.active {
+            color: var(--white);
+            border-bottom-color: var(--gold);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .user-badge {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .user-badge i {
+            color: var(--gold);
+        }
+        .logout-btn {
+            background: rgba(212, 168, 83, 0.15);
+            color: var(--gold);
+            border: 1px solid rgba(212, 168, 83, 0.25);
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: inherit;
+        }
+        .logout-btn:hover {
+            background: var(--danger);
+            color: var(--white);
+            border-color: var(--danger);
+        }
+
+        .admin-toggle-btn {
+            background: rgba(212, 168, 83, 0.15);
+            color: var(--gold);
+            border: 1px solid rgba(212, 168, 83, 0.25);
+            padding: 8px 18px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .admin-toggle-btn:hover {
+            background: var(--gold);
+            color: var(--navy);
+            border-color: var(--gold);
+        }
+        .admin-toggle-btn.active {
+            background: var(--gold);
+            color: var(--navy);
+            border-color: var(--gold);
+        }
+
+        /* ===== MAIN ===== */
+        #mainApp {
+            display: none;
+        }
+        #mainApp.active {
+            display: block;
+        }
+
+        main {
+            padding: 30px 0 60px;
+        }
+
+        .page-header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .page-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        .page-header h1 i {
+            color: var(--gold);
+            margin-right: 10px;
+        }
+        .page-header .subtitle {
+            color: var(--gray);
+            font-size: 0.95rem;
+        }
+
+        /* ===== TABLE CONTROLS ===== */
+        .table-controls {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 16px;
+            background: var(--white);
+            padding: 14px 20px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        .category-filter {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            width: 100%;
+            margin-bottom: 4px;
+        }
+        .category-filter label {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--gray);
+            margin-right: 4px;
+        }
+        .category-filter .cat-btn {
+            padding: 4px 16px;
+            border-radius: 30px;
+            border: 2px solid var(--light-gray);
+            background: transparent;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: inherit;
+            color: var(--gray);
+        }
+        .category-filter .cat-btn:hover {
+            border-color: var(--gold);
+            color: var(--navy);
+        }
+        .category-filter .cat-btn.active {
+            background: var(--navy);
+            color: var(--white);
+            border-color: var(--navy);
+        }
+        .category-filter .cat-btn .badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 0 8px;
+            font-size: 0.65rem;
+            margin-left: 4px;
+            color: var(--gray);
+        }
+        .category-filter .cat-btn.active .badge {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .category-filter .cat-btn.policy-btn {
+            border-color: rgba(11, 26, 51, 0.2);
+            color: var(--navy);
+        }
+        .category-filter .cat-btn.policy-btn.active {
+            background: var(--navy);
+            color: var(--white);
+            border-color: var(--navy);
+        }
+        .category-filter .cat-btn.credit-btn {
+            border-color: rgba(212, 168, 83, 0.3);
+            color: var(--gold);
+        }
+        .category-filter .cat-btn.credit-btn.active {
+            background: var(--gold);
+            color: var(--navy);
+            border-color: var(--gold);
+        }
+        .category-filter .cat-btn.pdacts-btn {
+            border-color: rgba(90, 160, 120, 0.25);
+            color: #2d7a4f;
+        }
+        .category-filter .cat-btn.pdacts-btn.active {
+            background: #2d7a4f;
+            color: var(--white);
+            border-color: #2d7a4f;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            flex: 1 1 240px;
+            background: var(--off-white);
+            border-radius: 50px;
+            padding: 4px 16px 4px 18px;
+            border: 2px solid transparent;
+            transition: var(--transition);
+        }
+        .search-box:focus-within {
+            border-color: var(--gold);
+            background: var(--white);
+        }
+        .search-box i {
+            color: var(--gray);
+            margin-right: 10px;
+        }
+        .search-box input {
+            border: none;
+            background: transparent;
+            padding: 10px 0;
+            font-size: 0.95rem;
+            width: 100%;
+            outline: none;
+            font-family: inherit;
+            color: var(--navy);
+        }
+
+        .year-filter {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .year-filter label {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--gray);
+        }
+        .year-filter .year-btn {
+            padding: 4px 14px;
+            border-radius: 30px;
+            border: 2px solid var(--light-gray);
+            background: transparent;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: inherit;
+            color: var(--gray);
+        }
+        .year-filter .year-btn:hover {
+            border-color: var(--gold);
+            color: var(--navy);
+        }
+        .year-filter .year-btn.active {
+            background: var(--navy);
+            color: var(--white);
+            border-color: var(--navy);
+        }
+
+        .stats-badge {
+            font-size: 0.8rem;
+            color: var(--gray);
+            background: var(--off-white);
+            padding: 4px 14px;
+            border-radius: 30px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .stats-badge strong {
+            color: var(--navy);
+        }
+
+        /* ===== TABLE ===== */
+        .table-wrapper {
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: auto;
+            padding: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            min-width: 500px;
+        }
+
+        table thead {
+            background: var(--navy);
+            color: var(--white);
+        }
+        table th {
+            padding: 14px 18px;
+            text-align: left;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+        table th:not(:first-child) {
+            text-align: center;
+        }
+        table td {
+            padding: 12px 18px;
+            border-bottom: 1px solid var(--light-gray);
+            vertical-align: middle;
+        }
+        table td:not(:first-child) {
+            text-align: center;
+        }
+        table tbody tr:last-child td {
+            border-bottom: none;
+        }
+        table tbody tr:hover {
+            background: rgba(212, 168, 83, 0.05);
+        }
+
+        .category-badge {
+            display: inline-block;
+            padding: 3px 14px;
+            border-radius: 50px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            border: 1px solid rgba(212, 168, 83, 0.2);
+        }
+        .category-badge.policy {
+            background: rgba(11, 26, 51, 0.08);
+            color: var(--navy);
+            border-color: rgba(11, 26, 51, 0.15);
+        }
+        .category-badge.credit {
+            background: rgba(212, 168, 83, 0.15);
+            color: var(--gold);
+            border-color: rgba(212, 168, 83, 0.3);
+        }
+        .category-badge.pd-acts {
+            background: rgba(90, 160, 120, 0.12);
+            color: #2d7a4f;
+            border-color: rgba(90, 160, 120, 0.2);
+        }
+
+        .circular-link {
+            display: inline-block;
+            color: var(--navy);
+            font-weight: 600;
+            background: rgba(11, 26, 51, 0.06);
+            padding: 2px 12px;
+            border-radius: 30px;
+            transition: var(--transition);
+            font-size: 0.82rem;
+            border: 1px solid transparent;
+            margin: 2px 0;
+            cursor: pointer;
+        }
+        .circular-link:hover {
+            background: var(--gold);
+            color: var(--white);
+            border-color: var(--gold);
+            transform: scale(1.02);
+        }
+        .circular-link.multiple {
+            background: rgba(212, 168, 83, 0.12);
+            border-color: rgba(212, 168, 83, 0.2);
+        }
+        .circular-link.multiple:hover {
+            background: var(--gold);
+            border-color: var(--gold);
+            color: var(--white);
+        }
+        .circular-link.has-file {
+            border-color: var(--success);
+            background: rgba(92, 184, 92, 0.10);
+        }
+        .circular-link.has-file:hover {
+            background: var(--success);
+            border-color: var(--success);
+            color: var(--white);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 50px 20px;
+            color: var(--gray);
+        }
+        .no-results i {
+            font-size: 2.5rem;
+            display: block;
+            margin-bottom: 12px;
+            color: var(--light-gray);
+        }
+
+        .desc-cell {
+            font-weight: 500;
+            font-size: 0.88rem;
+            text-align: left !important;
+        }
+
+        .note-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 8px;
+            font-size: 0.85rem;
+            color: var(--gray);
+            cursor: pointer;
+            transition: var(--transition);
+            background: none;
+            border: none;
+            padding: 0 4px;
+            vertical-align: middle;
+            border-radius: 4px;
+            width: 22px;
+            height: 22px;
+        }
+        .note-icon:hover {
+            color: var(--gold);
+            background: rgba(212, 168, 83, 0.12);
+            transform: scale(1.15);
+        }
+        .note-icon.has-note {
+            color: var(--gold);
+        }
+        .note-icon.has-note:hover {
+            color: var(--gold-light);
+            background: rgba(212, 168, 83, 0.2);
+        }
+
+        .desc-text {
+            display: inline;
+            vertical-align: middle;
+        }
+
+        .note-tooltip {
+            position: relative;
+            cursor: help;
+        }
+        .note-tooltip .tooltip-text {
+            visibility: hidden;
+            opacity: 0;
+            width: 260px;
+            background: var(--navy);
+            color: var(--white);
+            text-align: left;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 400;
+            line-height: 1.4;
+            position: absolute;
+            z-index: 100;
+            bottom: 130%;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: opacity 0.25s ease, visibility 0.25s ease;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+            white-space: normal;
+            word-break: break-word;
+            pointer-events: none;
+        }
+        .note-tooltip .tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -6px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: var(--navy) transparent transparent transparent;
+        }
+        .note-tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* ===== ADMIN PANEL ===== */
+        .admin-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 9998;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .admin-overlay.open {
+            display: flex;
+        }
+
+        .admin-panel {
+            background: var(--white);
+            border-radius: var(--radius);
+            max-width: 1000px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.25s ease;
+            margin: 20px auto;
+            position: relative;
+        }
+
+        .admin-panel .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--light-gray);
+            background: var(--off-white);
+            border-radius: var(--radius) var(--radius) 0 0;
+        }
+        .admin-panel .admin-header h2 {
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--navy);
+        }
+        .admin-panel .admin-header .close-admin-btn {
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: var(--gray);
+            transition: var(--transition);
+        }
+        .admin-panel .admin-header .close-admin-btn:hover {
+            color: var(--danger);
+            transform: rotate(90deg);
+        }
+
+        .admin-tabs {
+            display: flex;
+            background: var(--off-white);
+            border-bottom: 1px solid var(--light-gray);
+            overflow-x: auto;
+            padding: 0 16px;
+        }
+        .admin-tabs button {
+            padding: 14px 20px;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: inherit;
+            color: var(--gray);
+            white-space: nowrap;
+        }
+        .admin-tabs button:hover {
+            color: var(--navy);
+            background: rgba(11, 26, 51, 0.03);
+        }
+        .admin-tabs button.active {
+            color: var(--navy);
+            border-bottom-color: var(--gold);
+        }
+
+        .admin-content {
+            padding: 28px 30px;
+        }
+        .admin-tab-pane {
+            display: none;
+        }
+        .admin-tab-pane.active {
+            display: block;
+            animation: fadeIn 0.25s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .admin-content h3 {
+            font-size: 1.2rem;
+            margin-bottom: 6px;
+        }
+        .admin-content .desc {
+            color: var(--gray);
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px 24px;
+        }
+        .form-grid .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .form-group label {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--navy);
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 10px 14px;
+            border: 2px solid var(--light-gray);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-family: inherit;
+            transition: var(--transition);
+            background: var(--off-white);
+            color: var(--navy);
+            width: 100%;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--gold);
+            background: var(--white);
+            box-shadow: 0 0 0 4px rgba(212, 168, 83, 0.08);
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+        .form-group .file-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .form-group .file-input-wrapper input[type="file"] {
+            padding: 8px 0;
+            border: none;
+            background: transparent;
+        }
+        .form-group .file-name {
+            font-size: 0.85rem;
+            color: var(--gray);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .reset-btn-container {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--light-gray);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .base-path-group {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
+            background: var(--off-white);
+            padding: 16px 20px;
+            border-radius: var(--radius);
+            margin-top: 20px;
+            border: 1px solid var(--light-gray);
+        }
+        .base-path-group label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+        .base-path-group input {
+            flex: 1;
+            min-width: 200px;
+            padding: 8px 14px;
+            border: 2px solid var(--light-gray);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-family: inherit;
+            background: var(--white);
+            color: var(--navy);
+        }
+        .base-path-group input:focus {
+            outline: none;
+            border-color: var(--gold);
+            box-shadow: 0 0 0 4px rgba(212, 168, 83, 0.08);
+        }
+        .base-path-group .hint {
+            font-size: 0.8rem;
+            color: var(--gray);
+        }
+
+        .batch-update-group {
+            background: var(--off-white);
+            padding: 16px 20px;
+            border-radius: var(--radius);
+            margin-top: 16px;
+            border: 1px solid var(--light-gray);
+        }
+        .batch-update-group h4 {
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+        .batch-update-group .batch-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+        }
+        .batch-update-group .batch-row input {
+            flex: 1;
+            min-width: 120px;
+            padding: 8px 14px;
+            border: 2px solid var(--light-gray);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-family: inherit;
+            background: var(--white);
+            color: var(--navy);
+        }
+        .batch-update-group .batch-row input:focus {
+            outline: none;
+            border-color: var(--gold);
+        }
+        .batch-update-group .batch-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .admin-list {
+            margin-top: 16px;
+        }
+        .admin-list-item {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: var(--off-white);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 4px solid var(--gold);
+            gap: 12px;
+        }
+        .admin-list-item .info {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px 16px;
+            flex: 1;
+        }
+        .admin-list-item .info .desc {
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        .admin-list-item .info .meta {
+            font-size: 0.8rem;
+            color: var(--gray);
+        }
+        .admin-list-item .actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--gray);
+        }
+        .empty-state i {
+            font-size: 2.5rem;
+            color: var(--light-gray);
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        /* ===== MODALS ===== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .modal-overlay.open {
+            display: flex;
+        }
+        .modal {
+            background: var(--white);
+            border-radius: var(--radius);
+            max-width: 700px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.25s ease;
+        }
+        .modal h2 {
+            font-size: 1.4rem;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .modal .close-btn {
+            margin-left: auto;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray);
+        }
+        .modal .close-btn:hover {
+            color: var(--danger);
+        }
+        .modal .form-group {
+            margin-bottom: 12px;
+        }
+        .modal .form-group label {
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        .modal .form-group input,
+        .modal .form-group select {
+            width: 100%;
+        }
+        .modal .year-entry {
+            background: var(--off-white);
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 3px solid var(--gold);
+        }
+        .modal .year-entry .year-label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+            color: var(--navy);
+        }
+        .modal .year-entry .form-group {
+            margin-bottom: 6px;
+        }
+        .modal .year-entry .form-group:last-child {
+            margin-bottom: 0;
+        }
+        .modal .file-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .modal .file-row input[type="text"] {
+            flex: 1;
+            min-width: 120px;
+        }
+        .modal .file-row .btn {
+            white-space: nowrap;
+        }
+
+        .info-hint {
+            font-size: 0.8rem;
+            color: var(--gray);
+            background: var(--off-white);
+            padding: 4px 12px;
+            border-radius: 20px;
+            display: inline-block;
+            border: 1px solid var(--light-gray);
+        }
+
+        #noteModal .modal {
+            max-width: 500px;
+        }
+        #noteModal .modal textarea {
+            min-height: 120px;
+            resize: vertical;
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid var(--light-gray);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-family: inherit;
+            transition: var(--transition);
+            background: var(--off-white);
+            color: var(--navy);
+        }
+        #noteModal .modal textarea:focus {
+            outline: none;
+            border-color: var(--gold);
+            background: var(--white);
+            box-shadow: 0 0 0 4px rgba(212, 168, 83, 0.08);
+        }
+        #noteModal .note-desc-display {
+            font-size: 0.9rem;
+            color: var(--gray);
+            margin-bottom: 12px;
+            padding: 8px 12px;
+            background: var(--off-white);
+            border-radius: 6px;
+            border-left: 3px solid var(--gold);
+        }
+
+        #changePasswordModal .modal {
+            max-width: 450px;
+        }
+
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 400px;
+            width: 100%;
+        }
+        .toast {
+            padding: 14px 20px;
+            border-radius: var(--radius);
+            color: var(--white);
+            font-weight: 500;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+            animation: slideUp 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.9rem;
+        }
+        .toast.success {
+            background: var(--success);
+        }
+        .toast.error {
+            background: var(--danger);
+        }
+        .toast.warning {
+            background: var(--warning);
+            color: var(--navy);
+        }
+        .toast.info {
+            background: var(--navy);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 992px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .form-grid .full-width { grid-column: 1; }
+            .page-header h1 { font-size: 1.6rem; }
+            .modal { padding: 20px; }
+            .base-path-group { flex-direction: column; align-items: stretch; }
+            .batch-update-group .batch-row { flex-direction: column; align-items: stretch; }
+            .category-filter { gap: 6px; }
+            .category-filter .cat-btn { padding: 3px 12px; font-size: 0.75rem; }
+            .admin-panel { margin: 10px; max-height: 95vh; }
+            .admin-content { padding: 20px 16px; }
+            .login-box { padding: 30px 20px; margin: 20px; }
+        }
+
+        @media (max-width: 768px) {
+            .nav-wrapper { flex-wrap: wrap; gap: 8px; }
+            .nav-links { gap: 12px; flex-wrap: wrap; }
+            .nav-links a { font-size: 0.85rem; }
+            .admin-toggle-btn { font-size: 0.8rem; padding: 6px 14px; }
+            .header-actions { gap: 8px; }
+            .user-badge { font-size: 0.75rem; }
+            .logout-btn { font-size: 0.7rem; padding: 4px 12px; }
+            .table-controls { flex-direction: column; align-items: stretch; padding: 14px 16px; }
+            .search-box { flex: 1; }
+            .year-filter { justify-content: center; }
+            .category-filter { justify-content: center; }
+            .admin-content { padding: 16px; }
+            .admin-tabs button { padding: 10px 14px; font-size: 0.8rem; }
+            .admin-list-item { flex-direction: column; align-items: stretch; }
+            .admin-list-item .actions { justify-content: flex-end; }
+            table { font-size: 0.8rem; min-width: 400px; }
+            table th, table td { padding: 10px 12px; }
+            .desc-cell { font-size: 0.8rem; }
+            .circular-link { font-size: 0.75rem; padding: 1px 10px; }
+            .modal .file-row { flex-direction: column; align-items: stretch; }
+            .note-tooltip .tooltip-text { width: 200px; font-size: 0.75rem; left: 0; transform: none; }
+            .note-tooltip .tooltip-text::after { left: 20px; }
+            .admin-overlay { padding: 10px; }
+            .admin-panel .admin-header h2 { font-size: 1.1rem; }
+        }
+
+        @media (max-width: 480px) {
+            .container { padding: 0 12px; }
+            .page-header h1 { font-size: 1.3rem; }
+            .logo { font-size: 1.2rem; }
+            .logo i { font-size: 1.3rem; }
+            table { font-size: 0.7rem; min-width: 320px; }
+            table th, table td { padding: 8px 8px; }
+            .category-badge { font-size: 0.6rem; padding: 2px 10px; }
+            .circular-link { font-size: 0.7rem; padding: 1px 8px; }
+            .admin-tabs button { font-size: 0.75rem; padding: 8px 12px; }
+            .btn { font-size: 0.8rem; padding: 8px 16px; }
+            .modal { padding: 16px; }
+            .category-filter .cat-btn { font-size: 0.7rem; padding: 2px 10px; }
+            .note-icon { font-size: 0.75rem; width: 18px; height: 18px; margin-left: 4px; }
+            .login-box .logo-large { font-size: 2rem; }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ===== LOGIN SCREEN ===== -->
+    <div id="loginScreen" class="active">
+        <div class="login-box">
+            <div class="logo-large">
+                <i class="fas fa-scroll" style="color:var(--gold);"></i> Made<span style="color:var(--gold);">easy</span>
+            </div>
+            <div class="subtitle">Circular Management System</div>
+            <form id="loginForm" autocomplete="off">
+                <div class="form-group">
+                    <label for="loginUsername">Username</label>
+                    <input type="text" id="loginUsername" placeholder="Enter username" value="admin" required />
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter password" value="admin123" required />
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-sign-in-alt"></i> Login</button>
+                <div class="error-msg" id="loginError"></div>
+                <div class="footer-text">Default: admin / admin123</div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== MAIN APP ===== -->
+    <div id="mainApp">
+        <header>
+            <div class="container nav-wrapper">
+                <a href="#" class="logo">
+                    <i class="fas fa-scroll"></i>
+                    Made<span>easy</span>
+                </a>
+                <nav class="nav-links">
+                    <a href="#" class="active"><i class="fas fa-table"></i> Circulars</a>
+                </nav>
+                <div class="header-actions">
+                    <span class="user-badge"><i class="fas fa-user-circle"></i> <span id="userDisplay">admin</span></span>
+                    <button class="logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                    <button class="admin-toggle-btn" id="adminToggleBtn">
+                        <i class="fas fa-user-shield"></i> Admin Panel
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <div class="container">
+                <div class="page-header">
+                    <div>
+                        <h1><i class="fas fa-file-alt"></i> Circular Index</h1>
+                        <div class="subtitle">Browse, search, and manage all official circulars</div>
+                    </div>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                        <span class="stats-badge">
+                            <i class="fas fa-file-pdf"></i>
+                            <strong id="totalCirculars">0</strong> total entries
+                        </span>
+                        <span class="stats-badge">
+                            <i class="fas fa-calendar-alt"></i>
+                            <strong id="totalYears">0</strong> years
+                        </span>
+                    </div>
+                </div>
+
+                <div class="table-controls">
+                    <div class="category-filter" id="categoryFilter">
+                        <label><i class="fas fa-tags"></i> Category:</label>
+                        <button class="cat-btn policy-btn active" data-cat="all">All <span class="badge" id="catCountAll">0</span></button>
+                        <button class="cat-btn policy-btn" data-cat="Policy">📋 Policy <span class="badge" id="catCountPolicy">0</span></button>
+                        <button class="cat-btn credit-btn" data-cat="Credit">💰 Credit <span class="badge" id="catCountCredit">0</span></button>
+                        <button class="cat-btn pdacts-btn" data-cat="PD/Acts">⚖️ PD / Acts <span class="badge" id="catCountPDActs">0</span></button>
+                    </div>
+
+                    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;width:100%;">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="searchInput" placeholder="Search by description or circular number..." />
+                        </div>
+                        <div class="year-filter" id="yearFilter">
+                            <label>Year:</label>
+                            <button class="year-btn active" data-year="all">All</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="min-width:100px;">Category</th>
+                                <th style="min-width:220px;text-align:left;">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody id="circularTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ===== ADMIN PANEL ===== -->
+    <div class="admin-overlay" id="adminOverlay">
+        <div class="admin-panel">
+            <div class="admin-header">
+                <h2><i class="fas fa-user-shield" style="color:var(--gold);"></i> Admin Panel</h2>
+                <button class="close-admin-btn" id="closeAdminBtn">&times;</button>
+            </div>
+            <div class="admin-tabs" id="adminTabs">
+                <button class="active" data-tab="add">➕ Add Circular</button>
+                <button data-tab="years">📅 Manage Years</button>
+                <button data-tab="manage">📋 Manage Entries</button>
+                <button data-tab="account">🔐 Account</button>
+            </div>
+
+            <div class="admin-content">
+                <!-- Add Circular -->
+                <div class="admin-tab-pane active" id="tab-add">
+                    <h3>Add New Circular</h3>
+                    <div class="desc">Fill in the details below. If the description already exists, numbers will be appended.</div>
+                    <form id="addCircularForm">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="addDescription">Description <span style="color:var(--danger);">*</span></label>
+                                <input type="text" id="addDescription" placeholder="e.g. CREDIT MANAGEMENT AND RISK POLICY 2025-26" required />
+                            </div>
+                            <div class="form-group">
+                                <label for="addCategory">Category <span style="color:var(--danger);">*</span></label>
+                                <select id="addCategory" required>
+                                    <option value="Policy">Policy</option>
+                                    <option value="Credit">Credit</option>
+                                    <option value="PD/Acts">PD / Acts / Recovery</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="addYear">Financial Year <span style="color:var(--danger);">*</span></label>
+                                <select id="addYear" required></select>
+                            </div>
+                            <div class="form-group">
+                                <label for="addCircularNumber">Circular Number(s) <span style="color:var(--danger);">*</span></label>
+                                <input type="text" id="addCircularNumber" placeholder="e.g. 31, 85, 365" required />
+                                <small style="color:var(--gray);font-size:0.75rem;">Separate multiple numbers with commas</small>
+                            </div>
+                            <div class="form-group full-width">
+                                <label for="addFilePath">File Path</label>
+                                <input type="text" id="addFilePath" placeholder="e.g. https://xxxxx.supabase.co/storage/v1/object/public/circulars/25-26/31.pdf" />
+                                <small style="color:var(--gray);font-size:0.75rem;">If using Supabase, you can leave this blank and upload below.</small>
+                            </div>
+                            <div class="form-group full-width">
+                                <label for="addFile">Upload PDF (to Supabase)</label>
+                                <div class="file-input-wrapper">
+                                    <input type="file" id="addFile" accept=".pdf" />
+                                    <span class="file-name" id="addFileName">No file selected</span>
+                                </div>
+                                <small style="color:var(--gray);font-size:0.75rem;">Uploads to Supabase Storage – all numbers in this year will share this file.</small>
+                            </div>
+                            <div class="form-group full-width">
+                                <label for="addShortNote">Short Note (optional)</label>
+                                <textarea id="addShortNote" placeholder="Add a brief note..." rows="2"></textarea>
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary"><i class="fas fa-plus"></i> Add Circular</button>
+                            <button type="reset" class="btn btn-outline">Clear</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Manage Years -->
+                <div class="admin-tab-pane" id="tab-years">
+                    <h3>Manage Financial Years</h3>
+                    <div class="desc">Add new years or remove existing ones.</div>
+                    <form id="addYearForm" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:20px;">
+                        <div class="form-group" style="flex:1;min-width:180px;">
+                            <label for="newYearInput">New Year Range</label>
+                            <input type="text" id="newYearInput" placeholder="e.g. 27-28" pattern="\d{2}-\d{2}" />
+                        </div>
+                        <button type="submit" class="btn btn-success"><i class="fas fa-plus"></i> Add Year</button>
+                    </form>
+                    <div id="yearList" class="admin-list"></div>
+                </div>
+
+                <!-- Manage Entries -->
+                <div class="admin-tab-pane" id="tab-manage">
+                    <h3>Manage Circular Entries</h3>
+                    <div class="desc">View, edit, or delete entries. Export/Import for backup.</div>
+                    <div id="entriesList" class="admin-list"></div>
+
+                    <div style="background:var(--off-white);padding:16px 20px;border-radius:var(--radius);margin-top:20px;border:1px solid var(--light-gray);">
+                        <h4><i class="fas fa-database"></i> Backup & Restore</h4>
+                        <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;">
+                            <button class="btn btn-success btn-sm" id="exportDataBtn"><i class="fas fa-download"></i> Export Data (JSON)</button>
+                            <button class="btn btn-primary btn-sm" id="importDataBtn"><i class="fas fa-upload"></i> Import Data (JSON)</button>
+                            <input type="file" id="importFileInput" accept=".json" style="display:none;" />
+                            <span class="hint" style="margin-left:8px;">Export all data as backup.</span>
+                        </div>
+                    </div>
+
+                    <div class="base-path-group">
+                        <label for="basePathInput"><i class="fas fa-folder"></i> Base File Path</label>
+                        <input type="text" id="basePathInput" placeholder="e.g. E:/Backup/All circular/" />
+                        <button class="btn btn-primary btn-sm" id="saveBasePathBtn"><i class="fas fa-save"></i> Save</button>
+                        <span class="hint">For local files – not needed if using Supabase.</span>
+                    </div>
+
+                    <div class="batch-update-group">
+                        <h4><i class="fas fa-tools"></i> Batch Update File Paths</h4>
+                        <div class="batch-row">
+                            <input type="text" id="batchFind" placeholder="Find" />
+                            <input type="text" id="batchReplace" placeholder="Replace with" />
+                            <button class="btn btn-primary btn-sm" id="applyFindReplaceBtn"><i class="fas fa-sync"></i> Apply</button>
+                        </div>
+                        <div class="batch-actions">
+                            <button class="btn btn-success btn-sm" id="prependBaseBtn"><i class="fas fa-plus"></i> Prepend Base Path</button>
+                            <button class="btn btn-warning btn-sm" id="convertAbsoluteToRelativeBtn"><i class="fas fa-arrows-left-right"></i> Convert to Relative</button>
+                        </div>
+                    </div>
+
+                    <div class="reset-btn-container">
+                        <button class="btn btn-danger" onclick="resetAllData()">
+                            <i class="fas fa-trash-alt"></i> Reset All Data
+                        </button>
+                        <span style="font-size:0.75rem;color:var(--gray);">⚠️ Deletes all custom data.</span>
+                    </div>
+                </div>
+
+                <!-- Account -->
+                <div class="admin-tab-pane" id="tab-account">
+                    <h3>Account Settings</h3>
+                    <div class="desc">Change your password.</div>
+                    <div style="background:var(--off-white);padding:16px 20px;border-radius:var(--radius);border:1px solid var(--light-gray);margin-bottom:16px;">
+                        <p><strong>Username:</strong> <span id="accountUsername">admin</span></p>
+                        <p><strong>Account Type:</strong> Administrator</p>
+                    </div>
+                    <button class="btn btn-primary" id="changePasswordBtn"><i class="fas fa-key"></i> Change Password</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MODALS ===== -->
+    <!-- Change Password -->
+    <div class="modal-overlay" id="changePasswordModal">
+        <div class="modal">
+            <h2>
+                <i class="fas fa-key"></i> Change Password
+                <button class="close-btn" onclick="closeChangePasswordModal()">&times;</button>
+            </h2>
+            <form id="changePasswordForm">
+                <div class="form-group">
+                    <label for="currentPassword">Current Password</label>
+                    <input type="password" id="currentPassword" required />
+                </div>
+                <div class="form-group">
+                    <label for="newPassword">New Password</label>
+                    <input type="password" id="newPassword" required minlength="6" />
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm New Password</label>
+                    <input type="password" id="confirmPassword" required />
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Update Password</button>
+                    <button type="button" class="btn btn-outline" onclick="closeChangePasswordModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal">
+            <h2>
+                <i class="fas fa-edit"></i> Edit Circular
+                <button class="close-btn" onclick="closeEditModal()">&times;</button>
+            </h2>
+            <form id="editForm">
+                <input type="hidden" id="editDescId" />
+                <div class="form-group">
+                    <label for="editDescription">Description <span style="color:var(--danger);">*</span></label>
+                    <input type="text" id="editDescription" required />
+                </div>
+                <div class="form-group">
+                    <label for="editCategory">Category <span style="color:var(--danger);">*</span></label>
+                    <select id="editCategory" required>
+                        <option value="Policy">Policy</option>
+                        <option value="Credit">Credit</option>
+                        <option value="PD/Acts">PD / Acts / Recovery</option>
+                    </select>
+                </div>
+                <div id="editYearEntries"></div>
+                <div class="form-group" style="margin-top:12px;">
+                    <label for="editShortNote">Short Note</label>
+                    <textarea id="editShortNote" rows="3" placeholder="Add a brief note..."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Changes</button>
+                    <button type="button" class="btn btn-outline" onclick="closeEditModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Note Modal -->
+    <div class="modal-overlay" id="noteModal">
+        <div class="modal">
+            <h2>
+                <i class="fas fa-sticky-note"></i> Circular Note
+                <button class="close-btn" onclick="closeNoteModal()">&times;</button>
+            </h2>
+            <div class="note-desc-display" id="noteModalDesc">—</div>
+            <div class="form-group">
+                <label for="noteTextarea">Note</label>
+                <textarea id="noteTextarea" rows="4" placeholder="Add a note..."></textarea>
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-primary" id="saveNoteBtn"><i class="fas fa-save"></i> Save Note</button>
+                <button class="btn btn-outline" onclick="closeNoteModal()">Cancel</button>
+                <button class="btn btn-danger" id="deleteNoteBtn" style="margin-left:auto;"><i class="fas fa-trash"></i> Delete Note</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== TOAST CONTAINER ===== -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- ============================================================ -->
+    <!-- ===== JAVASCRIPT ===== -->
+    <script>
+        (function() {
+            'use strict';
+
+            // =============================================================
+            // DEFAULT DATA
+            // =============================================================
+
+            const DEFAULT_DATA = {
+                years: ['25-26', '26-27'],
+                descriptions: [
+                    { id: 1, description: 'CREDIT MANAGEMENT AND RISK POLICY 2025-26', category: 'Policy' },
+                    { id: 2, description: 'CREDIT MONITORING & SMA MANAGEMENT POLICY', category: 'Policy' },
+                    { id: 3, description: 'DP BEFORE RETIREMENT', category: 'Policy' },
+                    { id: 4, description: 'LOAN DP FORMAT', category: 'Policy' },
+                    { id: 5, description: 'UDYAM ASSIST', category: 'Policy' },
+                    { id: 6, description: 'CGTMSE', category: 'Policy' },
+                    { id: 7, description: 'CGFMU', category: 'Policy' },
+                    { id: 8, description: 'LOAN PROTECTOR SCHEME', category: 'Policy' },
+                    { id: 9, description: 'PSLC IBPC', category: 'Policy' },
+                    { id: 10, description: 'EMPANELMENT OF VALUER', category: 'Policy' },
+                    { id: 11, description: 'POLICY FOR EMPANELMENT OF ADVOCATES', category: 'Policy' },
+                    { id: 12, description: 'LIST OF EMPANELLED ADVOCATES', category: 'Policy' },
+                    { id: 13, description: 'CREDIT RISK MITIGATION POLICY', category: 'Policy' },
+                    { id: 14, description: 'DIGITAL BANKING POLICY', category: 'Policy' },
+                    { id: 15, description: 'INFORMATION SECURITY & AUDIT POLICY', category: 'Policy' },
+                    { id: 16, description: 'IT POLICY', category: 'Policy' },
+                    { id: 17, description: 'IT PROCUREMENT POLICY', category: 'Policy' },
+                    { id: 18, description: 'CYBER SECURITY & MOBILE DEVICE SECURITY POLICY', category: 'Policy' },
+                    { id: 19, description: 'SERVICE REGULATION', category: 'Policy' },
+                    { id: 20, description: 'PERIODIC REVIEW OF SERVICE', category: 'Policy' },
+                    { id: 21, description: 'HR POLICY', category: 'Policy' },
+                    { id: 22, description: 'LEAVE RULE', category: 'Policy' },
+                    { id: 23, description: 'ENTERTAINMENT ALLOWANCE', category: 'Policy' },
+                    { id: 24, description: 'SPEED- PROFESSIONAL COURSE', category: 'Policy' },
+                    { id: 25, description: 'STAFF FURNITURE', category: 'Policy' },
+                    { id: 26, description: 'SOP RETIREMENT BENEFIT', category: 'Policy' },
+                    { id: 27, description: 'SEXUAL HARRASMENT', category: 'Policy' },
+                    { id: 28, description: 'UNIFORM LIVERIES FOR OA & PTS', category: 'Policy' },
+                    { id: 29, description: 'ANNUAL HEALTH CHECK UP', category: 'Policy' },
+                    { id: 30, description: 'FRAUD RISK MANAGEMENT POLICY', category: 'Policy' },
+                    { id: 31, description: 'POLICY ON BC', category: 'Policy' },
+                    { id: 32, description: 'POLICY ON FLC', category: 'Policy' },
+                    { id: 33, description: 'RECOVERY POLICY', category: 'Policy' },
+                    { id: 34, description: 'SPECIAL OTS', category: 'Policy' },
+                    { id: 35, description: 'COMPLIANCE POLICY', category: 'Policy' },
+                    { id: 36, description: 'GRIEVANCE REDRESSAL POLICY', category: 'Policy' },
+                    { id: 37, description: 'CAR HIRING POLICY', category: 'Policy' },
+                    { id: 38, description: 'DEPOSIT POLICY', category: 'Policy' },
+                    { id: 39, description: 'DEAF ACCOUNT GUIDELINE', category: 'Policy' },
+                    { id: 40, description: 'EXPENDITURE DP', category: 'Policy' },
+                    { id: 41, description: 'IT DP', category: 'Policy' },
+                    { id: 42, description: 'ELECTRICAL FIRE POLICY', category: 'Policy' },
+                    { id: 43, description: 'SAFE DEPOSIT LOCKER POLICY', category: 'Policy' },
+                    { id: 44, description: 'PREMISES POLICY', category: 'Policy' },
+                    { id: 45, description: 'SERVICE PROCUREMENT POLICY', category: 'Policy' },
+                    { id: 46, description: 'AADHAAR CENTRE POLICY', category: 'Policy' },
+                    { id: 47, description: 'INSPECTION AND AUDIT POLICY', category: 'Policy' },
+                    { id: 48, description: 'SOP RBIA', category: 'Policy' },
+                    { id: 49, description: 'VIGILANCE MANUAL', category: 'Policy' },
+                    { id: 50, description: 'VIGILANCE MANUAL- REVISED', category: 'Policy' },
+                    { id: 51, description: 'SOP DISCIPLINARY ACTION', category: 'Policy' },
+                    { id: 52, description: 'DISCIPLINARY ACTION BEFORE RETIREMENT', category: 'Policy' },
+                    { id: 53, description: 'DISCIPLINARY PROCEEDING TIME SCHEDULE', category: 'Policy' },
+                    { id: 54, description: 'WHISTLEBLOWER POLICY', category: 'Policy' },
+                    { id: 55, description: 'DISCLOSURE POLICY', category: 'Policy' },
+                    { id: 56, description: 'CUSTOMER COMPENSATION POLICY', category: 'Policy' },
+                    { id: 57, description: 'CHEQUE COLLECTION POLICY', category: 'Policy' },
+                    { id: 58, description: 'KYC POLICY', category: 'Policy' },
+                    { id: 59, description: 'KYC UPDATION', category: 'Policy' },
+                    { id: 60, description: 'FOREIGN CONTRIBUTOR LIST- SUSPICIOUS', category: 'Policy' },
+                    { id: 61, description: 'REVISED KYC POLICY', category: 'Policy' },
+                    { id: 62, description: 'AADHAAR VERIFICATION', category: 'Policy' },
+                    { id: 63, description: 'CUSTOMER RIGHT POLICY', category: 'Policy' },
+                    { id: 64, description: 'BUSINESS CONTINUITY PLAN POLICY', category: 'Policy' },
+                    { id: 65, description: 'CORPORATE GOVERNANCE POLICY', category: 'Policy' },
+                    { id: 66, description: 'STRESS TESTING POLICY', category: 'Policy' },
+                    { id: 67, description: 'ICAAP POLICY', category: 'Policy' },
+                    { id: 68, description: 'RISK MANAGEMENT POLICY', category: 'Policy' },
+                    { id: 69, description: 'OPERATIONAL RISK MANAGEMENT POLICY', category: 'Policy' },
+                    { id: 70, description: 'NEW PRODUCT APPROVAL POLICY', category: 'Policy' },
+                    { id: 71, description: 'ENVIRONMENT SOCIAL GOVERNANCE POLICY', category: 'Policy' },
+                    { id: 72, description: 'CLIMATE RISK MANAGEMENT POLICY', category: 'Policy' },
+                    { id: 73, description: 'INCIDENT RESPONSE FRAMEWORK POLICY', category: 'Policy' },
+                    { id: 74, description: 'RBI MASTER DIRECTION FOR RRB', category: 'Policy' },
+                    { id: 75, description: 'REALIGNMENT OF REGION', category: 'Policy' },
+                    { id: 76, description: 'CASH MANAGEMENT SYSTEM (CMS) POLICY', category: 'Policy' },
+                    { id: 77, description: 'PROXY SERVER', category: 'Policy' },
+                    { id: 78, description: 'PRINCIPAL NODAL OFFICER', category: 'Policy' },
+                    { id: 79, description: 'EMAIL POLICY', category: 'Policy' },
+                    { id: 80, description: 'FINANCIAL LITERACY POLICY', category: 'Policy' },
+                    { id: 101, description: 'LOAN SCHEME CODE', category: 'Credit' },
+                    { id: 102, description: 'CIC MASTER CIRCULAR', category: 'Credit' },
+                    { id: 103, description: 'LOAN PRICING MECHANISM WEF 01.05.25', category: 'Credit' },
+                    { id: 104, description: 'LOAN PRICING MECHANISM WEF 01.09.25', category: 'Credit' },
+                    { id: 105, description: 'MCLR W.E.F. 20.05.25', category: 'Credit' },
+                    { id: 106, description: 'LOAN ROI W.E.F. 20.05.25', category: 'Credit' },
+                    { id: 107, description: 'MCLR W.E.F. 01.09.25', category: 'Credit' },
+                    { id: 108, description: 'MCLR W.E.F. 07.01.26', category: 'Credit' },
+                    { id: 109, description: 'LOAN ROI W.E.F. 01.09.25', category: 'Credit' },
+                    { id: 110, description: 'LOAN ROI W.E.F. 01.10.25 RLLR', category: 'Credit' },
+                    { id: 111, description: 'LOAN ROI W.E.F. 05.12.25 RLLR', category: 'Credit' },
+                    { id: 112, description: 'LOAN ROI W.E.F. 07.01.26 MCLR', category: 'Credit' },
+                    { id: 113, description: 'GOLD LOAN', category: 'Credit' },
+                    { id: 114, description: 'GOLD LOAN AGRI INTEREST RATE & CAMPAIGN', category: 'Credit' },
+                    { id: 115, description: 'GOLD LOAN SERVICE CHARGE WAIVER', category: 'Credit' },
+                    { id: 116, description: 'LOAN AGAINST DEPOSIT', category: 'Credit' },
+                    { id: 117, description: 'LOAN AGAINST NSC/ KVP', category: 'Credit' },
+                    { id: 118, description: 'DAY-NRLM SHG', category: 'Credit' },
+                    { id: 119, description: 'CSP-BL COMMISSION ACCOUNT', category: 'Credit' },
+                    { id: 120, description: 'MICROFINANCE', category: 'Credit' },
+                    { id: 121, description: 'PERSONAL LOAN', category: 'Credit' },
+                    { id: 122, description: 'PERSONAL LOAN RESTRICTION', category: 'Credit' },
+                    { id: 123, description: 'PERSONAL LOAN TO PENSIONERS', category: 'Credit' },
+                    { id: 124, description: 'MORTGAGE LOAN', category: 'Credit' },
+                    { id: 125, description: 'SAMPURNA', category: 'Credit' },
+                    { id: 126, description: 'TRANSPORT', category: 'Credit' },
+                    { id: 127, description: 'REPLACEMENT WITH LITHIUM BATTERY', category: 'Credit' },
+                    { id: 128, description: 'TIE UP WITH ASHOK LEYLAND', category: 'Credit' },
+                    { id: 129, description: 'TIE UP WITH TATA MOTORS', category: 'Credit' },
+                    { id: 130, description: 'TIE UP WITH MAHINDRA AND VE', category: 'Credit' },
+                    { id: 131, description: 'COMMISSION TO DEALER', category: 'Credit' },
+                    { id: 132, description: 'GSTNEXT', category: 'Credit' },
+                    { id: 133, description: 'CAR LOAN', category: 'Credit' },
+                    { id: 134, description: 'CAR LOAN SERVICE CHG TO DEALERS', category: 'Credit' },
+                    { id: 135, description: 'TWO WHEELER', category: 'Credit' },
+                    { id: 136, description: 'NIRMAN - LOAN TO PRIVATE BUILDERS', category: 'Credit' },
+                    { id: 137, description: 'BHABISYAT CREDIT CARD', category: 'Credit' },
+                    { id: 138, description: 'EDUCATION LOAN', category: 'Credit' },
+                    { id: 139, description: 'STUDENT CREDIT CARD ROI 15.04.25', category: 'Credit' },
+                    { id: 140, description: 'STUDENT CREDIT CARD ROI 15.06.25', category: 'Credit' },
+                    { id: 141, description: 'STUDENT CREDIT CARD ROI 15.12.25', category: 'Credit' },
+                    { id: 142, description: 'AIF', category: 'Credit' },
+                    { id: 143, description: 'KCC', category: 'Credit' },
+                    { id: 144, description: 'KCC SCALE OF FINANCE', category: 'Credit' },
+                    { id: 145, description: 'BSB- SASYA BIMA', category: 'Credit' },
+                    { id: 146, description: 'KCC INTEREST SUBVENTION', category: 'Credit' },
+                    { id: 147, description: 'KCC-AH', category: 'Credit' },
+                    { id: 148, description: 'GOAT SHEEP REARING', category: 'Credit' },
+                    { id: 149, description: 'FARM MECHANISATION', category: 'Credit' },
+                    { id: 150, description: 'UNIT COST FARM INVESTMENT', category: 'Credit' },
+                    { id: 151, description: 'MILK PRODUCTION ACTIVITY', category: 'Credit' },
+                    { id: 152, description: 'NATIONAL LIVESTOCK MISSION- EDEG', category: 'Credit' },
+                    { id: 153, description: 'FPO-FPC', category: 'Credit' },
+                    { id: 154, description: 'PMFME', category: 'Credit' },
+                    { id: 155, description: 'ROOFTOP SOLAR POWER SYSTEM', category: 'Credit' },
+                    { id: 156, description: 'MUDRA', category: 'Credit' },
+                    { id: 157, description: 'HBL', category: 'Credit' },
+                    { id: 158, description: 'HOME LOAN PROCESSING FEE WAIVER', category: 'Credit' },
+                    { id: 159, description: 'MONSOON BONANZA', category: 'Credit' },
+                    { id: 160, description: 'HBL REVISED LTV', category: 'Credit' },
+                    { id: 161, description: 'HBL FOR PENSIONERS', category: 'Credit' },
+                    { id: 162, description: 'HBL FLOATING TO FIXED INTEREST', category: 'Credit' },
+                    { id: 163, description: 'AAMAAR THIKANA', category: 'Credit' },
+                    { id: 164, description: 'APPROVAL OF PRIVATE BUILDERS', category: 'Credit' },
+                    { id: 165, description: 'PMAY 2.0 CLSS', category: 'Credit' },
+                    { id: 166, description: 'EQUITABLE MORTGAGE', category: 'Credit' },
+                    { id: 167, description: 'HBL-TOP UP', category: 'Credit' },
+                    { id: 168, description: 'ANNAKUT', category: 'Credit' },
+                    { id: 169, description: 'HIMANK', category: 'Credit' },
+                    { id: 170, description: 'UTSAB/ FESTIVAL LOAN', category: 'Credit' },
+                    { id: 171, description: 'CREDIT TO SC ST', category: 'Credit' },
+                    { id: 172, description: 'DISCONTINUATION NULM', category: 'Credit' },
+                    { id: 173, description: 'WINGS- WCTL', category: 'Credit' },
+                    { id: 174, description: 'PMSVANIDHI', category: 'Credit' },
+                    { id: 175, description: 'GENERAL CREDIT CARD', category: 'Credit' },
+                    { id: 176, description: 'STAFF CAR / TWO WHEELER LOAN', category: 'Credit' },
+                    { id: 177, description: 'STAFF HBL', category: 'Credit' },
+                    { id: 178, description: 'STAFF OVERDRAFT', category: 'Credit' },
+                    { id: 179, description: 'BANK GUARANTEE', category: 'Credit' },
+                    { id: 180, description: 'SOLVENCY CERTIFICATE', category: 'Credit' },
+                    { id: 181, description: 'PMEGP', category: 'Credit' },
+                    { id: 182, description: 'ECLGS 5.0', category: 'Credit' },
+                    { id: 201, description: 'JAN SURAKSHA PORTAL', category: 'PD/Acts' },
+                    { id: 202, description: 'SERVICE CHARGE', category: 'PD/Acts' },
+                    { id: 203, description: 'BANCASURANCE TIE UP', category: 'PD/Acts' },
+                    { id: 204, description: 'NOMINEE W.E.F. 17.11.25', category: 'PD/Acts' },
+                    { id: 205, description: 'DEPOSIT INTEREST W.E.F. 01.05.25', category: 'PD/Acts' },
+                    { id: 206, description: 'DEPOSIT INTEREST W.E.F. 08.07.25', category: 'PD/Acts' },
+                    { id: 207, description: 'DEPOSIT INTEREST W.E.F. 01.09.25', category: 'PD/Acts' },
+                    { id: 208, description: 'DEPOSIT INTEREST W.E.F. 12.02.26', category: 'PD/Acts' },
+                    { id: 209, description: 'DEPOSIT INTEREST W.E.F. 16.04.26', category: 'PD/Acts' },
+                    { id: 210, description: 'TAX SAVER DEPOSIT SCHEME', category: 'PD/Acts' },
+                    { id: 211, description: 'SB INTEREST WEF 27.06.25', category: 'PD/Acts' },
+                    { id: 212, description: 'BULK DEPOSIT', category: 'PD/Acts' },
+                    { id: 213, description: 'DEPOSIT SCHEME CODE', category: 'PD/Acts' },
+                    { id: 214, description: 'FDREPAY', category: 'PD/Acts' },
+                    { id: 215, description: 'SECURITY MEASURE AT BRANCH', category: 'PD/Acts' },
+                    { id: 216, description: 'RECOVERY POLICY', category: 'PD/Acts' },
+                    { id: 217, description: 'RECOVERY MENU', category: 'PD/Acts' },
+                    { id: 218, description: 'TWO - RECOVERY', category: 'PD/Acts' },
+                    { id: 219, description: 'LIST OF RECOVERY AGENT', category: 'PD/Acts' },
+                    { id: 220, description: 'SPECIAL OTS', category: 'PD/Acts' },
+                    { id: 221, description: 'CORPORATE BC TIE UP', category: 'PD/Acts' },
+                    { id: 222, description: 'BC ACCOUNT OPENING', category: 'PD/Acts' },
+                    { id: 223, description: 'ROLES OFFICE ASSISTANT', category: 'PD/Acts' },
+                    { id: 224, description: 'KEY HOLDING', category: 'PD/Acts' },
+                    { id: 225, description: 'JOB ROTATION', category: 'PD/Acts' },
+                    { id: 226, description: 'BANKING HOUR', category: 'PD/Acts' },
+                    { id: 227, description: 'TDS CHART', category: 'PD/Acts' },
+                    { id: 228, description: 'PMJBY PMSBY RENEWAL', category: 'PD/Acts' },
+                    { id: 229, description: 'PMJBY PMSBY ENROLMENT/ CLAIM', category: 'PD/Acts' },
+                    { id: 230, description: 'SURPRISE CASH/ GOLD VERIFICATION', category: 'PD/Acts' },
+                    { id: 231, description: 'PAN TAN LIST', category: 'PD/Acts' },
+                    { id: 232, description: 'GST NUMBER', category: 'PD/Acts' },
+                    { id: 233, description: 'GST GUIDELINE', category: 'PD/Acts' },
+                    { id: 234, description: 'EMPLOYEE ID LIST', category: 'PD/Acts' },
+                    { id: 235, description: 'SENIORITY LIST', category: 'PD/Acts' },
+                    { id: 236, description: 'PMJDY ATM CARD', category: 'PD/Acts' },
+                    { id: 237, description: 'MERCHANT QR', category: 'PD/Acts' },
+                    { id: 238, description: 'IMPS', category: 'PD/Acts' },
+                    { id: 239, description: 'ATM CARD TRACK', category: 'PD/Acts' },
+                    { id: 240, description: 'M-BANKING CC OD ACCOUNT', category: 'PD/Acts' },
+                    { id: 241, description: 'IN HOUSE ECS NACH', category: 'PD/Acts' },
+                    { id: 242, description: 'STR', category: 'PD/Acts' },
+                    { id: 243, description: 'DAILY WAGE', category: 'PD/Acts' },
+                    { id: 244, description: 'MDSS COMMISSION GRATUITY', category: 'PD/Acts' },
+                    { id: 245, description: 'MDSS GUIDELINE', category: 'PD/Acts' },
+                    { id: 246, description: 'RE-KYC COMMISSION TO BC', category: 'PD/Acts' },
+                    { id: 247, description: 'PROMPT SERVICE TO RETIRED STAFF', category: 'PD/Acts' },
+                    { id: 248, description: 'ANNUAL CLOSING', category: 'PD/Acts' },
+                    { id: 249, description: 'ELECTION MODEL CODE OF CONDUCT', category: 'PD/Acts' },
+                    { id: 250, description: 'Form 121 replacing 15g/15h', category: 'PD/Acts' },
+                    { id: 251, description: 'Corporate Internet Banking', category: 'PD/Acts' },
+                    { id: 252, description: 'Enhance Security features of mobile banking', category: 'PD/Acts' },
+                    { id: 253, description: 'Implementation of Sec 51', category: 'PD/Acts' },
+                    { id: 254, description: 'Financial Performance of bank 31/3/26', category: 'PD/Acts' },
+                    { id: 255, description: 'WHATSAPP BANKING BENGALI', category: 'PD/Acts' },
+                    { id: 256, description: 'BIOMETRIC BYPASS', category: 'PD/Acts' },
+                    { id: 257, description: 'UDYAM REGISTRATION MENU', category: 'PD/Acts' },
+                    { id: 258, description: 'PERFORMANCE RANKING MODEL', category: 'PD/Acts' },
+                    { id: 259, description: 'CLOSING CIRCULAR', category: 'PD/Acts' }
+                ],
+                circulars: {
+                    '25-26': {
+                        '1': '31, 85, 365',
+                        '2': '53',
+                        '3': '106',
+                        '4': '148, 305',
+                        '5': '160',
+                        '6': '169',
+                        '7': '196',
+                        '8': '297',
+                        '9': '20, 387',
+                        '10': '21',
+                        '11': '63',
+                        '12': '103, 176',
+                        '13': '36',
+                        '14': '48',
+                        '15': '49',
+                        '16': '50',
+                        '17': '51',
+                        '18': '52',
+                        '19': '55',
+                        '20': '255',
+                        '21': '56',
+                        '22': '112',
+                        '23': '177',
+                        '24': '178',
+                        '26': '105, 109',
+                        '27': '316',
+                        '28': '367',
+                        '29': '368',
+                        '30': '59, 190, 329',
+                        '31': '61',
+                        '32': '62',
+                        '33': '64, 175',
+                        '34': '172',
+                        '35': '66',
+                        '36': '67',
+                        '37': '69',
+                        '38': '70, 394',
+                        '39': '159, 164',
+                        '40': '71',
+                        '42': '72',
+                        '43': '73',
+                        '44': '74',
+                        '45': '75, 350',
+                        '46': '77',
+                        '47': '78',
+                        '48': '118, 202',
+                        '49': '79',
+                        '50': '242',
+                        '51': '104',
+                        '52': '108',
+                        '53': '285',
+                        '54': '60',
+                        '55': '80',
+                        '56': '81',
+                        '57': '82',
+                        '58': '91',
+                        '59': '168, 299',
+                        '60': '170, 298, 376',
+                        '61': '183, 239',
+                        '62': '228',
+                        '63': '92',
+                        '64': '93',
+                        '65': '94, 390',
+                        '66': '95, 389',
+                        '67': '96',
+                        '68': '97, 327',
+                        '69': '98, 391',
+                        '70': '240, 328',
+                        '71': '330',
+                        '72': '331',
+                        '73': '334, 392',
+                        '74': '399, 400',
+                        '101': '205',
+                        '102': '4, 304',
+                        '103': '5',
+                        '104': '219, 230',
+                        '105': '113',
+                        '106': '114',
+                        '107': '216',
+                        '108': '344',
+                        '109': '221, 230',
+                        '110': '261',
+                        '111': '309',
+                        '112': '347',
+                        '113': '6, 89, 121, 125, 249',
+                        '114': '254, 289',
+                        '115': '312',
+                        '116': '7, 333',
+                        '117': '41',
+                        '118': '8, 89, 137',
+                        '119': '137, 296',
+                        '120': '9',
+                        '121': '10, 137, 262',
+                        '122': '68',
+                        '123': '140',
+                        '124': '1, 11, 37, 164',
+                        '125': '12, 89',
+                        '126': '13, 164, 262, 352',
+                        '127': '1, 91, 64, 370',
+                        '128': '171',
+                        '129': '211',
+                        '130': '388',
+                        '131': '212',
+                        '132': '14137',
+                        '133': '35, 137, 233',
+                        '134': '17',
+                        '135': '45',
+                        '136': '18',
+                        '137': '22137164',
+                        '138': '28, 137, 164, 383',
+                        '139': '145',
+                        '140': '147',
+                        '141': '319',
+                        '142': '24',
+                        '143': '29',
+                        '144': '33',
+                        '145': '195, 286',
+                        '146': '220, 243, 403',
+                        '147': '30',
+                        '148': '32',
+                        '149': '38',
+                        '150': '192',
+                        '151': '31',
+                        '152': '234',
+                        '153': '25',
+                        '154': '26',
+                        '155': '27',
+                        '156': '40',
+                        '157': '46137',
+                        '158': '15',
+                        '159': '141',
+                        '160': '155',
+                        '161': '165',
+                        '162': '189',
+                        '163': '303',
+                        '164': '16',
+                        '165': '371',
+                        '166': '37',
+                        '167': '39, 89',
+                        '168': '138',
+                        '169': '332',
+                        '170': '139, 226',
+                        '171': '227',
+                        '172': '229',
+                        '173': '235',
+                        '174': '244',
+                        '175': '246',
+                        '176': '42',
+                        '177': '43',
+                        '178': '44',
+                        '179': '34',
+                        '180': '252',
+                        '181': '379',
+                        '201': '65',
+                        '202': '76',
+                        '203': '83, 193, 206',
+                        '204': '287',
+                        '205': '85',
+                        '206': '163',
+                        '207': '217',
+                        '208': '374',
+                        '210': '222',
+                        '211': '237',
+                        '212': '248',
+                        '213': '320',
+                        '214': '321',
+                        '215': '86',
+                        '216': '64, 175, 335, 384',
+                        '217': '269',
+                        '218': '87, 260',
+                        '219': '110, 336',
+                        '220': '172, 337',
+                        '221': '88',
+                        '222': '143',
+                        '223': '99',
+                        '224': '314',
+                        '225': '315',
+                        '226': '100',
+                        '227': '101',
+                        '228': '107',
+                        '229': '232',
+                        '230': '115',
+                        '231': '124',
+                        '232': '126',
+                        '233': '307',
+                        '234': '129',
+                        '235': '130',
+                        '236': '152',
+                        '237': '198',
+                        '238': '266',
+                        '239': '276',
+                        '240': '373',
+                        '241': '377',
+                        '242': '218',
+                        '243': '224',
+                        '244': '225',
+                        '245': '313, 348',
+                        '246': '236',
+                        '247': '393',
+                        '248': '396',
+                        '249': '397'
+                    },
+                    '26-27': {
+                        '1': '39, 42',
+                        '17': '15, 114',
+                        '25': '67',
+                        '31': '80',
+                        '33': '29',
+                        '35': '17',
+                        '36': '18',
+                        '37': '112',
+                        '41': '16',
+                        '42': '111',
+                        '44': '14',
+                        '45': '114',
+                        '50': '32',
+                        '58': '8',
+                        '60': '65, 68',
+                        '70': '104',
+                        '75': '31',
+                        '76': '50',
+                        '77': '74',
+                        '78': '86',
+                        '79': '117',
+                        '80': '115',
+                        '113': '62',
+                        '122': '10',
+                        '144': '2',
+                        '157': '41, 42',
+                        '158': '41, 42',
+                        '182': '71, 83',
+                        '209': '13, 73',
+                        '212': '52',
+                        '220': '87',
+                        '227': '12',
+                        '240': '120',
+                        '250': '1',
+                        '251': '3',
+                        '252': '4',
+                        '253': '9, 68',
+                        '254': '27',
+                        '255': '33',
+                        '256': '38',
+                        '257': '47',
+                        '258': '48',
+                        '259': '77'
+                    }
+                },
+                files: {},
+                basePath: '',
+                notes: {}
+            };
+
+            // =============================================================
+            // STATE
+            // =============================================================
+
+            let appData = null;
+            let editFileData = {};
+            let noteModalDescId = null;
+            let isAuthenticated = false;
+            let currentUser = null;
+            let supabaseClient = null;
+            let supabaseBucket = 'circulars';
+
+            // =============================================================
+            // SERVER API COMMUNICATION
+            // =============================================================
+
+            async function apiFetch(endpoint, options = {}) {
+                const defaultOptions = {
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' }
+                };
+                const mergedOptions = {
+                    ...defaultOptions,
+                    ...options,
+                    headers: { ...defaultOptions.headers, ...(options.headers || {}) }
+                };
+                const response = await fetch(endpoint, mergedOptions);
+                if (response.status === 401) {
+                    logout();
+                    throw new Error('Session expired. Please login again.');
+                }
+                return response;
+            }
+
+            async function login(username, password) {
+                const response = await apiFetch('/api/login', {
+                    method: 'POST',
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await response.json();
+                if (!data.success) throw new Error(data.error || 'Login failed');
+                isAuthenticated = true;
+                currentUser = data.user;
+                return true;
+            }
+
+            async function logout() {
+                try { await apiFetch('/api/logout', { method: 'POST' }); } catch (e) {}
+                isAuthenticated = false;
+                currentUser = null;
+                showLoginScreen();
+            }
+
+            async function checkSession() {
+                try {
+                    const response = await apiFetch('/api/session');
+                    const data = await response.json();
+                    if (data.authenticated) {
+                        isAuthenticated = true;
+                        currentUser = data.user;
+                        return true;
+                    }
+                } catch (e) {}
+                return false;
+            }
+
+            async function changePassword(currentPassword, newPassword) {
+                const response = await apiFetch('/api/change-password', {
+                    method: 'POST',
+                    body: JSON.stringify({ currentPassword, newPassword })
+                });
+                const data = await response.json();
+                if (!data.success) throw new Error(data.error || 'Password change failed');
+                return data;
+            }
+
+            async function fetchDataFromServer() {
+                const response = await apiFetch('/api/data');
+                const data = await response.json();
+                if (!data.years) data.years = [];
+                if (!data.descriptions) data.descriptions = [];
+                if (!data.circulars) data.circulars = {};
+                if (!data.files) data.files = {};
+                if (!data.notes) data.notes = {};
+                if (!data.basePath) data.basePath = '';
+                data.years.forEach(y => {
+                    if (!data.circulars[y]) data.circulars[y] = {};
+                    if (!data.files[y]) data.files[y] = {};
+                });
+                return data;
+            }
+
+            async function saveDataToServer(data) {
+                const response = await apiFetch('/api/data', {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                if (!result.success) throw new Error(result.error || 'Save failed');
+                appData = data;
+            }
+
+            async function saveBasePathToServer(basePath) {
+                const response = await apiFetch('/api/config/basePath', {
+                    method: 'POST',
+                    body: JSON.stringify({ basePath })
+                });
+                const result = await response.json();
+                if (!result.success) throw new Error(result.error || 'Save failed');
+                appData.basePath = basePath;
+            }
+
+            // =============================================================
+            // SUPABASE HELPERS
+            // =============================================================
+
+            async function fetchSupabaseConfig() {
+                try {
+                    const response = await fetch('/api/supabase-config');
+                    const config = await response.json();
+                    if (config.url && config.anonKey) {
+                        supabaseClient = window.supabase.createClient(config.url, config.anonKey);
+                        supabaseBucket = config.bucket || 'circulars';
+                        console.log('☁️ Supabase client initialized');
+                        return true;
+                    }
+                } catch (e) {
+                    console.warn('Supabase not available:', e);
+                }
+                return false;
+            }
+
+            async function uploadFileToSupabase(file, year, descId, circularNum) {
+                if (!supabaseClient) {
+                    throw new Error('Supabase not configured. Please check your environment variables.');
+                }
+                const filePath = `${year}/${descId}/${circularNum}.pdf`;
+                const { data, error } = await supabaseClient.storage
+                    .from(supabaseBucket)
+                    .upload(filePath, file, { upsert: true });
+                if (error) throw new Error(error.message);
+                const { data: urlData } = supabaseClient.storage
+                    .from(supabaseBucket)
+                    .getPublicUrl(filePath);
+                return urlData.publicUrl;
+            }
+
+            // =============================================================
+            // UI HELPERS
+            // =============================================================
+
+            function showLoginScreen() {
+                document.getElementById('loginScreen').classList.add('active');
+                document.getElementById('mainApp').classList.remove('active');
+            }
+
+            function showMainApp() {
+                document.getElementById('loginScreen').classList.remove('active');
+                document.getElementById('mainApp').classList.add('active');
+                document.getElementById('userDisplay').textContent = currentUser ? currentUser.username : 'admin';
+                document.getElementById('accountUsername').textContent = currentUser ? currentUser.username : 'admin';
+            }
+
+            function showToast(message, type = 'info') {
+                const container = document.getElementById('toastContainer');
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+                toast.innerHTML = `<i class="fas ${icons[type] || icons.info}"></i> ${message}`;
+                container.appendChild(toast);
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateY(10px)';
+                    setTimeout(() => toast.remove(), 300);
+                }, 4000);
+            }
+
+            function getCategoryClass(cat) {
+                if (cat === 'Policy') return 'policy';
+                if (cat === 'Credit') return 'credit';
+                return 'pd-acts';
+            }
+
+            function getNextDescId() {
+                const ids = appData.descriptions.map(d => d.id);
+                return ids.length ? Math.max(...ids) + 1 : 1;
+            }
+
+            function normalizeFilePathToUrl(rawPath, basePath) {
+                if (!rawPath || rawPath.trim() === '') return null;
+                let path = rawPath.trim();
+                path = path.replace(/\\/g, '/');
+                if (!/^[a-zA-Z]:[\/\\]/.test(path) && !/^\/[^\/]/.test(path) && !/^https?:\/\//.test(path) && !/^file:\/\//.test(path)) {
+                    if (basePath) {
+                        let base = basePath.trim().replace(/\\/g, '/');
+                        if (!base.endsWith('/')) base += '/';
+                        path = base + path;
+                    }
+                }
+                if (/^[a-zA-Z]:[\/\\]/.test(path)) {
+                    path = 'file:///' + path;
+                } else if (/^\/\/[^\/]/.test(path)) {
+                    path = 'file:' + path;
+                }
+                return path;
+            }
+
+            // =============================================================
+            // RENDER TABLE
+            // =============================================================
+
+            function renderTable(filter = '', yearFilter = 'all', categoryFilter = 'all') {
+                try {
+                    const tbody = document.getElementById('circularTableBody');
+                    const years = appData.years || [];
+                    const descriptions = appData.descriptions || [];
+                    const circulars = appData.circulars || {};
+                    const basePath = appData.basePath || '';
+                    const notes = appData.notes || {};
+                    const files = appData.files || {};
+
+                    let totalEntries = 0;
+                    years.forEach(y => {
+                        const cy = circulars[y] || {};
+                        totalEntries += Object.keys(cy).length;
+                    });
+                    document.getElementById('totalCirculars').textContent = totalEntries;
+                    document.getElementById('totalYears').textContent = years.length;
+
+                    const catCounts = { all: descriptions.length, Policy: 0, Credit: 0, 'PD/Acts': 0 };
+                    descriptions.forEach(d => {
+                        if (d.category === 'Policy') catCounts.Policy++;
+                        else if (d.category === 'Credit') catCounts.Credit++;
+                        else if (d.category === 'PD/Acts') catCounts['PD/Acts']++;
+                    });
+                    document.getElementById('catCountAll').textContent = catCounts.all;
+                    document.getElementById('catCountPolicy').textContent = catCounts.Policy;
+                    document.getElementById('catCountCredit').textContent = catCounts.Credit;
+                    document.getElementById('catCountPDActs').textContent = catCounts['PD/Acts'];
+
+                    const filterLower = filter.toLowerCase();
+                    let filteredDescs = descriptions;
+
+                    if (categoryFilter !== 'all') {
+                        filteredDescs = filteredDescs.filter(d => d.category === categoryFilter);
+                    }
+
+                    if (filter) {
+                        filteredDescs = filteredDescs.filter(d => {
+                            const descMatch = d.description.toLowerCase().includes(filterLower);
+                            let numMatch = false;
+                            years.forEach(y => {
+                                const cy = circulars[y] || {};
+                                const nums = cy[d.id] || '';
+                                if (nums.toLowerCase().includes(filterLower)) numMatch = true;
+                            });
+                            return descMatch || numMatch;
+                        });
+                    }
+
+                    if (yearFilter !== 'all') {
+                        filteredDescs = filteredDescs.filter(d => {
+                            const cy = circulars[yearFilter] || {};
+                            return cy[d.id] && cy[d.id].trim() !== '';
+                        });
+                    }
+
+                    if (filteredDescs.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="${years.length + 2}" class="no-results"><i class="fas fa-search"></i>No circulars found</td></tr>`;
+                        return;
+                    }
+
+                    filteredDescs.sort((a, b) => {
+                        if (a.category !== b.category) return a.category.localeCompare(b.category);
+                        return a.description.localeCompare(b.description);
+                    });
+
+                    let html = '';
+                    filteredDescs.forEach(d => {
+                        const catClass = getCategoryClass(d.category);
+                        const noteText = notes[d.id] || '';
+                        const hasNote = noteText.length > 0;
+
+                        let descHtml = `<span class="desc-text">${d.description}</span>`;
+                        if (hasNote) {
+                            const shortPreview = noteText.length > 60 ? noteText.substring(0, 60) + '…' : noteText;
+                            descHtml += `
+                                <span class="note-tooltip">
+                                    <button class="note-icon has-note" data-descid="${d.id}" title="Click to edit note">
+                                        <i class="fas fa-sticky-note"></i>
+                                    </button>
+                                    <span class="tooltip-text">${shortPreview}</span>
+                                </span>
+                            `;
+                        } else {
+                            descHtml += `
+                                <button class="note-icon" data-descid="${d.id}" title="Add a note">
+                                    <i class="far fa-sticky-note"></i>
+                                </button>
+                            `;
+                        }
+
+                        html += `<tr>
+                            <td><span class="category-badge ${catClass}">${d.category}</span></td>
+                            <td class="desc-cell">${descHtml}</td>`;
+
+                        years.forEach(y => {
+                            const cy = circulars[y] || {};
+                            const numbers = cy[d.id] || '';
+                            const numFiles = (files[y] && files[y][d.id]) ? files[y][d.id] : {};
+
+                            if (numbers.trim() === '') {
+                                html += `<td style="color:var(--light-gray);font-size:0.8rem;">—</td>`;
+                            } else {
+                                const nums = numbers.split(',').map(s => s.trim()).filter(s => s.length > 0);
+                                const links = nums.map(num => {
+                                    let href = '#';
+                                    let hasFile = false;
+                                    const fileEntry = numFiles[num] || null;
+                                    if (fileEntry) {
+                                        if (fileEntry.filePath) {
+                                            const url = normalizeFilePathToUrl(fileEntry.filePath, basePath);
+                                            if (url) { href = url; hasFile = true; }
+                                        } else if (fileEntry.fileData) {
+                                            href = fileEntry.fileData;
+                                            hasFile = true;
+                                        }
+                                    }
+                                    if (!hasFile) {
+                                        const rel = `circulars/${y}/${num}.pdf`;
+                                        const full = normalizeFilePathToUrl(rel, basePath);
+                                        href = full || rel;
+                                    }
+                                    const multiClass = nums.length > 1 ? 'multiple' : '';
+                                    const fileClass = hasFile ? 'has-file' : '';
+                                    return `<a href="${href}" target="_blank" class="circular-link ${multiClass} ${fileClass}" 
+                                              onclick="event.preventDefault(); openCircular('${y}', '${d.id}', '${num}');">
+                                              ${num}
+                                            </a>`;
+                                }).join(' ');
+                                html += `<td>${links}</td>`;
+                            }
+                        });
+
+                        html += `</tr>`;
+                    });
+
+                    tbody.innerHTML = html;
+
+                    document.querySelectorAll('.note-icon').forEach(btn => {
+                        btn.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            const descId = parseInt(this.dataset.descid);
+                            openNoteModal(descId);
+                        });
+                    });
+
+                } catch (e) {
+                    console.error('Error rendering table:', e);
+                    document.getElementById('circularTableBody').innerHTML =
+                        `<tr><td colspan="10" class="no-results"><i class="fas fa-exclamation-triangle"></i>Error rendering table.</td></tr>`;
+                }
+            }
+
+            // =============================================================
+            // OPEN CIRCULAR
+            // =============================================================
+
+            window.openCircular = function(year, descId, num) {
+                try {
+                    const files = (appData.files && appData.files[year]) ? appData.files[year] : {};
+                    const descFiles = files[descId] || {};
+                    const fileEntry = descFiles[num] || null;
+                    const basePath = appData.basePath || '';
+                    let url = '#';
+
+                    if (fileEntry) {
+                        if (fileEntry.filePath) {
+                            const normalized = normalizeFilePathToUrl(fileEntry.filePath, basePath);
+                            if (normalized) url = normalized;
+                        } else if (fileEntry.fileData) {
+                            url = fileEntry.fileData;
+                        }
+                    }
+
+                    if (url === '#') {
+                        const rel = `circulars/${year}/${num}.pdf`;
+                        const full = normalizeFilePathToUrl(rel, basePath);
+                        url = full || rel;
+                    }
+
+                    const win = window.open(url, '_blank');
+                    if (!win || win.closed) {
+                        showToast('Unable to open circular. Please ensure the file exists.', 'warning');
+                    }
+                } catch (e) {
+                    console.error('Error opening circular:', e);
+                    showToast('Error opening circular.', 'error');
+                }
+            };
+
+            // =============================================================
+            // RENDER YEAR FILTER
+            // =============================================================
+
+            function renderYearFilter(active = 'all') {
+                const container = document.getElementById('yearFilter');
+                const years = appData.years || [];
+                let html = `<label>Year:</label>
+                            <button class="year-btn ${active === 'all' ? 'active' : ''}" data-year="all">All</button>`;
+                years.forEach(y => {
+                    html += `<button class="year-btn ${active === y ? 'active' : ''}" data-year="${y}">${y}</button>`;
+                });
+                container.innerHTML = html;
+
+                container.querySelectorAll('.year-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const year = this.dataset.year;
+                        renderYearFilter(year);
+                        const search = document.getElementById('searchInput').value;
+                        const cat = getActiveCategory();
+                        renderTable(search, year, cat);
+                    });
+                });
+            }
+
+            // =============================================================
+            // CATEGORY FILTER HELPERS
+            // =============================================================
+
+            function getActiveCategory() {
+                const activeBtn = document.querySelector('.category-filter .cat-btn.active');
+                return activeBtn ? activeBtn.dataset.cat : 'all';
+            }
+
+            function setupCategoryFilter() {
+                const container = document.getElementById('categoryFilter');
+                container.querySelectorAll('.cat-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        container.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+                        this.classList.add('active');
+                        const cat = this.dataset.cat;
+                        const search = document.getElementById('searchInput').value;
+                        const year = getActiveYear();
+                        renderTable(search, year, cat);
+                    });
+                });
+            }
+
+            function getActiveYear() {
+                const activeBtn = document.querySelector('.year-btn.active');
+                return activeBtn ? activeBtn.dataset.year : 'all';
+            }
+
+            // =============================================================
+            // RENDER ADMIN LISTS
+            // =============================================================
+
+            function renderYearList() {
+                const container = document.getElementById('yearList');
+                const years = appData.years || [];
+                if (years.length === 0) {
+                    container.innerHTML = `<div class="empty-state"><i class="fas fa-calendar-plus"></i>No years added yet.</div>`;
+                    return;
+                }
+                let html = '';
+                years.forEach(y => {
+                    const cy = appData.circulars && appData.circulars[y] ? appData.circulars[y] : {};
+                    const count = Object.keys(cy).length;
+                    html += `<div class="admin-list-item">
+                        <div class="info">
+                            <span class="desc"><i class="fas fa-calendar-alt" style="color:var(--gold);"></i> ${y}</span>
+                            <span class="meta">${count} circulars</span>
+                        </div>
+                        <div class="actions">
+                            <button class="btn btn-danger btn-xs" onclick="deleteYear('${y}')">
+                                <i class="fas fa-trash"></i> Remove
+                            </button>
+                        </div>
+                    </div>`;
+                });
+                container.innerHTML = html;
+            }
+
+            function renderEntriesList() {
+                const container = document.getElementById('entriesList');
+                const descs = appData.descriptions || [];
+                if (descs.length === 0) {
+                    container.innerHTML = `<div class="empty-state"><i class="fas fa-file-alt"></i>No circular entries yet.</div>`;
+                    return;
+                }
+
+                let html = '';
+                descs.forEach(d => {
+                    const catClass = getCategoryClass(d.category);
+                    const yearsWithData = (appData.years || []).filter(y => {
+                        const cy = appData.circulars && appData.circulars[y] ? appData.circulars[y] : {};
+                        return cy[d.id] && cy[d.id].trim() !== '';
+                    });
+                    const yearStr = yearsWithData.length ? yearsWithData.join(', ') : 'No data';
+                    const hasNote = (appData.notes && appData.notes[d.id]) ? '📝' : '';
+
+                    html += `<div class="admin-list-item">
+                        <div class="info">
+                            <span class="desc">${d.description} ${hasNote}</span>
+                            <span class="meta">
+                                <span class="category-badge ${catClass}" style="font-size:0.7rem;">${d.category}</span>
+                                <span style="margin-left:8px;"><i class="fas fa-calendar"></i> ${yearStr}</span>
+                            </span>
+                        </div>
+                        <div class="actions">
+                            <button class="btn btn-primary btn-xs" onclick="openEditModal(${d.id})">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="btn btn-danger btn-xs" onclick="deleteDescription(${d.id})">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </div>
+                    </div>`;
+                });
+                container.innerHTML = html;
+            }
+
+            // =============================================================
+            // NOTE MODAL
+            // =============================================================
+
+            function openNoteModal(descId) {
+                const desc = appData.descriptions.find(d => d.id === descId);
+                if (!desc) { showToast('Circular entry not found.', 'error'); return; }
+                noteModalDescId = descId;
+                document.getElementById('noteModalDesc').textContent = `📄 ${desc.description} (${desc.category})`;
+                document.getElementById('noteTextarea').value = (appData.notes && appData.notes[descId]) || '';
+                document.getElementById('noteModal').classList.add('open');
+            }
+
+            function closeNoteModal() {
+                document.getElementById('noteModal').classList.remove('open');
+                noteModalDescId = null;
+            }
+
+            window.openNoteModal = openNoteModal;
+            window.closeNoteModal = closeNoteModal;
+
+            document.getElementById('saveNoteBtn').addEventListener('click', async function() {
+                if (noteModalDescId === null) { showToast('No circular selected.', 'error'); return; }
+                const note = document.getElementById('noteTextarea').value.trim();
+                if (!appData.notes) appData.notes = {};
+                if (note) appData.notes[noteModalDescId] = note;
+                else delete appData.notes[noteModalDescId];
+                try {
+                    await saveDataToServer(appData);
+                    closeNoteModal();
+                    refreshAll();
+                    showToast(note ? 'Note saved successfully.' : 'Note deleted.', 'success');
+                } catch (e) { showToast('Error saving note: ' + e.message, 'error'); }
+            });
+
+            document.getElementById('deleteNoteBtn').addEventListener('click', async function() {
+                if (noteModalDescId === null) return;
+                if (!confirm('Delete this note?')) return;
+                if (appData.notes) delete appData.notes[noteModalDescId];
+                try {
+                    await saveDataToServer(appData);
+                    closeNoteModal();
+                    refreshAll();
+                    showToast('Note deleted.', 'success');
+                } catch (e) { showToast('Error deleting note: ' + e.message, 'error'); }
+            });
+
+            document.getElementById('noteModal').addEventListener('click', function(e) {
+                if (e.target === this) closeNoteModal();
+            });
+
+            // =============================================================
+            // EDIT MODAL (with Supabase upload)
+            // =============================================================
+
+            window.openEditModal = function(descId) {
+                const desc = appData.descriptions.find(d => d.id === descId);
+                if (!desc) return;
+
+                editFileData = {};
+
+                document.getElementById('editDescId').value = descId;
+                document.getElementById('editDescription').value = desc.description;
+                document.getElementById('editCategory').value = desc.category;
+                document.getElementById('editShortNote').value = (appData.notes && appData.notes[descId]) || '';
+
+                const container = document.getElementById('editYearEntries');
+                container.innerHTML = '';
+
+                (appData.years || []).forEach(y => {
+                    const cy = (appData.circulars && appData.circulars[y]) ? appData.circulars[y] : {};
+                    const numbers = cy[descId] || '';
+                    const numArray = numbers.split(',').map(s => s.trim()).filter(s => s);
+                    const files = (appData.files && appData.files[y]) ? appData.files[y] : {};
+                    const numFiles = files[descId] || {};
+
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'year-entry';
+
+                    const label = document.createElement('div');
+                    label.className = 'year-label';
+                    label.innerHTML = `<i class="fas fa-calendar"></i> ${y} <span class="info-hint" style="font-size:0.7rem;">${numArray.length} circular(s)</span>`;
+                    wrapper.appendChild(label);
+
+                    if (numArray.length === 0) {
+                        const emptyMsg = document.createElement('div');
+                        emptyMsg.style.cssText = 'color:var(--gray);font-size:0.85rem;padding:4px 0;';
+                        emptyMsg.textContent = 'No circular numbers for this year.';
+                        wrapper.appendChild(emptyMsg);
+                    } else {
+                        numArray.forEach(num => {
+                            const fileEntry = numFiles[num] || { fileName: '', fileData: '', filePath: '' };
+                            if (!editFileData[y]) editFileData[y] = {};
+                            editFileData[y][num] = {
+                                fileName: fileEntry.fileName || '',
+                                fileData: fileEntry.fileData || '',
+                                filePath: fileEntry.filePath || ''
+                            };
+
+                            const rowDiv = document.createElement('div');
+                            rowDiv.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--light-gray);margin-bottom:6px;';
+                            rowDiv.innerHTML = `<span style="font-weight:600;min-width:50px;">${num}</span>`;
+
+                            const pathInput = document.createElement('input');
+                            pathInput.type = 'text';
+                            pathInput.className = 'edit-num-file-path';
+                            pathInput.dataset.year = y;
+                            pathInput.dataset.num = num;
+                            pathInput.value = fileEntry.filePath || '';
+                            pathInput.placeholder = 'File path (URL or local)';
+                            pathInput.style.cssText = 'flex:1;padding:4px 8px;border:1px solid var(--light-gray);border-radius:4px;';
+                            rowDiv.appendChild(pathInput);
+
+                            // Upload to Supabase
+                            const uploadLabel = document.createElement('label');
+                            uploadLabel.className = 'btn btn-primary btn-sm';
+                            uploadLabel.style.cssText = 'cursor:pointer;padding:2px 10px;font-size:0.7rem;margin:0;';
+                            uploadLabel.innerHTML = '<i class="fas fa-cloud-upload-alt"></i>';
+                            const fileInput = document.createElement('input');
+                            fileInput.type = 'file';
+                            fileInput.className = 'edit-num-file-upload';
+                            fileInput.dataset.year = y;
+                            fileInput.dataset.num = num;
+                            fileInput.accept = '.pdf';
+                            fileInput.style.display = 'none';
+                            uploadLabel.appendChild(fileInput);
+                            rowDiv.appendChild(uploadLabel);
+
+                            // Clear button
+                            const clearBtn = document.createElement('button');
+                            clearBtn.type = 'button';
+                            clearBtn.className = 'btn btn-sm btn-outline';
+                            clearBtn.style.cssText = 'padding:2px 10px;font-size:0.7rem;';
+                            clearBtn.textContent = 'Clear';
+                            clearBtn.dataset.year = y;
+                            clearBtn.dataset.num = num;
+                            rowDiv.appendChild(clearBtn);
+
+                            wrapper.appendChild(rowDiv);
+
+                            // File input change → upload to Supabase
+                            fileInput.addEventListener('change', async function(e) {
+                                const file = this.files[0];
+                                const year = this.dataset.year;
+                                const num = this.dataset.num;
+                                if (!file) return;
+                                try {
+                                    if (!supabaseClient) {
+                                        showToast('Supabase not configured. Please check server environment variables.', 'error');
+                                        return;
+                                    }
+                                    const publicUrl = await uploadFileToSupabase(file, year, descId, num);
+                                    const pathInput = this.parentElement.querySelector('.edit-num-file-path');
+                                    pathInput.value = publicUrl;
+                                    if (!editFileData[year]) editFileData[year] = {};
+                                    if (!editFileData[year][num]) editFileData[year][num] = {};
+                                    editFileData[year][num].filePath = publicUrl;
+                                    editFileData[year][num].fileName = file.name;
+                                    showToast(`📄 "${file.name}" uploaded to Supabase`, 'success');
+                                } catch (err) {
+                                    showToast('Upload failed: ' + err.message, 'error');
+                                }
+                            });
+
+                            // Clear button
+                            clearBtn.addEventListener('click', function() {
+                                const year = this.dataset.year;
+                                const num = this.dataset.num;
+                                const pathInput = this.parentElement.querySelector('.edit-num-file-path');
+                                const fileInput = this.parentElement.querySelector('.edit-num-file-upload');
+                                fileInput.value = '';
+                                pathInput.value = '';
+                                if (editFileData[year] && editFileData[year][num]) {
+                                    delete editFileData[year][num];
+                                }
+                                showToast(`File cleared for ${year} - ${num}`, 'info');
+                            });
+
+                            // Path input change
+                            pathInput.addEventListener('input', function() {
+                                const year = this.dataset.year;
+                                const num = this.dataset.num;
+                                if (!editFileData[year]) editFileData[year] = {};
+                                if (!editFileData[year][num]) editFileData[year][num] = { fileName: '', fileData: '', filePath: '' };
+                                editFileData[year][num].filePath = this.value;
+                            });
+                        });
+                    }
+
+                    container.appendChild(wrapper);
+                });
+
+                document.getElementById('editModal').classList.add('open');
+            };
+
+            window.closeEditModal = function() {
+                document.getElementById('editModal').classList.remove('open');
+                editFileData = {};
+            };
+
+            document.getElementById('editForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const descId = parseInt(document.getElementById('editDescId').value);
+                const description = document.getElementById('editDescription').value.trim();
+                const category = document.getElementById('editCategory').value;
+                const shortNote = document.getElementById('editShortNote').value.trim();
+
+                if (!description) { showToast('Description is required.', 'error'); return; }
+
+                const data = appData;
+                const desc = data.descriptions.find(d => d.id === descId);
+                if (desc) { desc.description = description;
+                    desc.category = category; }
+
+                if (!data.notes) data.notes = {};
+                if (shortNote) data.notes[descId] = shortNote;
+                else delete data.notes[descId];
+
+                const yearEntries = document.querySelectorAll('.year-entry');
+                yearEntries.forEach(entry => {
+                    const yearLabel = entry.querySelector('.year-label');
+                    let year = '';
+                    if (yearLabel) {
+                        const text = yearLabel.textContent.trim();
+                        const match = text.match(/(\d{2}-\d{2})/);
+                        if (match) year = match[1];
+                    }
+                    if (!year) return;
+
+                    const pathInputs = entry.querySelectorAll('.edit-num-file-path');
+                    pathInputs.forEach(inp => {
+                        const num = inp.dataset.num;
+                        const path = inp.value.trim();
+                        if (!data.files) data.files = {};
+                        if (!data.files[year]) data.files[year] = {};
+                        if (!data.files[year][descId]) data.files[year][descId] = {};
+
+                        let fileData = null;
+                        if (editFileData[year] && editFileData[year][num]) {
+                            fileData = editFileData[year][num];
+                        }
+
+                        if (fileData) {
+                            data.files[year][descId][num] = {
+                                fileName: fileData.fileName || '',
+                                fileData: fileData.fileData || '',
+                                filePath: path || fileData.fileName || ''
+                            };
+                        } else {
+                            if (path) {
+                                if (data.files[year][descId][num]) {
+                                    data.files[year][descId][num].filePath = path;
+                                } else {
+                                    data.files[year][descId][num] = { fileName: '', fileData: '', filePath: path };
+                                }
+                            } else {
+                                if (data.files[year][descId][num]) {
+                                    if (!data.files[year][descId][num].fileData) {
+                                        delete data.files[year][descId][num];
+                                    } else {
+                                        data.files[year][descId][num].filePath = '';
+                                    }
+                                }
+                            }
+                        }
+                    });
+                });
+
+                try {
+                    await saveDataToServer(data);
+                    closeEditModal();
+                    refreshAll();
+                    showToast('Circular updated successfully.', 'success');
+                } catch (e) { showToast('Error updating circular: ' + e.message, 'error'); }
+            });
+
+            // =============================================================
+            // ADMIN ACTIONS
+            // =============================================================
+
+            window.deleteYear = async function(year) {
+                if (!confirm(`Remove year "${year}" and all its circulars?`)) return;
+                const data = appData;
+                data.years = data.years.filter(y => y !== year);
+                delete data.circulars[year];
+                delete data.files[year];
+                try {
+                    await saveDataToServer(data);
+                    refreshAll();
+                    showToast(`Year ${year} removed.`, 'success');
+                } catch (e) { showToast('Error removing year: ' + e.message, 'error'); }
+            };
+
+            window.deleteDescription = async function(id) {
+                if (!confirm('Delete this entry? This will remove all associated data.')) return;
+                const data = appData;
+                data.descriptions = data.descriptions.filter(d => d.id !== id);
+                data.years.forEach(y => {
+                    if (data.circulars[y]) delete data.circulars[y][id];
+                    if (data.files[y]) delete data.files[y][id];
+                });
+                if (data.notes) delete data.notes[id];
+                try {
+                    await saveDataToServer(data);
+                    refreshAll();
+                    showToast('Entry deleted.', 'success');
+                } catch (e) { showToast('Error deleting entry: ' + e.message, 'error'); }
+            };
+
+            // =============================================================
+            // CHANGE PASSWORD
+            // =============================================================
+
+            function openChangePasswordModal() {
+                document.getElementById('changePasswordModal').classList.add('open');
+                document.getElementById('currentPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+            }
+
+            function closeChangePasswordModal() {
+                document.getElementById('changePasswordModal').classList.remove('open');
+            }
+
+            document.getElementById('changePasswordBtn').addEventListener('click', openChangePasswordModal);
+
+            document.getElementById('changePasswordForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const currentPassword = document.getElementById('currentPassword').value;
+                const newPassword = document.getElementById('newPassword').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+
+                if (newPassword !== confirmPassword) { showToast('New passwords do not match.', 'error'); return; }
+                if (newPassword.length < 6) { showToast('New password must be at least 6 characters.', 'error'); return; }
+
+                try {
+                    await changePassword(currentPassword, newPassword);
+                    closeChangePasswordModal();
+                    showToast('Password updated successfully.', 'success');
+                } catch (e) { showToast('Error changing password: ' + e.message, 'error'); }
+            });
+
+            // =============================================================
+            // BASE PATH
+            // =============================================================
+
+            function loadBasePath() {
+                document.getElementById('basePathInput').value = appData.basePath || '';
+            }
+
+            document.getElementById('saveBasePathBtn').addEventListener('click', async function() {
+                const path = document.getElementById('basePathInput').value.trim().replace(/\\/g, '/');
+                try {
+                    await saveBasePathToServer(path);
+                    refreshAll();
+                    showToast('Base path saved.', 'success');
+                } catch (e) { showToast('Error saving base path: ' + e.message, 'error'); }
+            });
+
+            // =============================================================
+            // BATCH UPDATE
+            // =============================================================
+
+            function applyFindReplace(findText, replaceText) {
+                if (!findText) { showToast('Please enter text to find.', 'error'); return; }
+                if (!confirm(`Replace all occurrences of "${findText}" with "${replaceText}"?`)) return;
+                let count = 0;
+                const files = appData.files;
+                for (const year in files) {
+                    const yearObj = files[year];
+                    for (const descId in yearObj) {
+                        const numMap = yearObj[descId];
+                        if (typeof numMap === 'object' && !Array.isArray(numMap)) {
+                            for (const num in numMap) {
+                                const entry = numMap[num];
+                                if (entry.filePath) {
+                                    const updated = entry.filePath.replace(new RegExp(findText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), replaceText);
+                                    if (updated !== entry.filePath) { entry.filePath = updated;
+                                        count++; }
+                                }
+                            }
+                        }
+                    }
+                }
+                if (count === 0) { showToast('No changes made.', 'info'); } else {
+                    saveDataToServer(appData);
+                    refreshAll();
+                    showToast(`Updated ${count} file path(s).`, 'success');
+                }
+            }
+
+            function prependBaseToRelative() {
+                const base = appData.basePath;
+                if (!base) { showToast('Please set a Base Path first.', 'error'); return; }
+                if (!confirm(`Prepend base path "${base}" to all relative paths?`)) return;
+                let count = 0;
+                const files = appData.files;
+                for (const year in files) {
+                    const yearObj = files[year];
+                    for (const descId in yearObj) {
+                        const numMap = yearObj[descId];
+                        if (typeof numMap === 'object' && !Array.isArray(numMap)) {
+                            for (const num in numMap) {
+                                const entry = numMap[num];
+                                if (entry.filePath) {
+                                    const path = entry.filePath.trim();
+                                    if (!/^[a-zA-Z]:[\/\\]/.test(path) && !/^\/[^\/]/.test(path) && !/^https?:\/\//.test(path) && !/^file:\/\//.test(path)) {
+                                        let baseClean = base.trim().replace(/\\/g, '/');
+                                        if (!baseClean.endsWith('/')) baseClean += '/';
+                                        entry.filePath = baseClean + path;
+                                        count++;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                if (count === 0) { showToast('No relative paths found.', 'info'); } else {
+                    saveDataToServer(appData);
+                    refreshAll();
+                    showToast(`Prepended base to ${count} path(s).`, 'success');
+                }
+            }
+
+            function convertAbsoluteToRelative() {
+                const base = appData.basePath;
+                if (!base) { showToast('Please set a Base Path first.', 'error'); return; }
+                if (!confirm(`Convert all absolute paths starting with "${base}" to relative?`)) return;
+                let count = 0;
+                const files = appData.files;
+                const baseClean = base.trim().replace(/\\/g, '/') + '/';
+                for (const year in files) {
+                    const yearObj = files[year];
+                    for (const descId in yearObj) {
+                        const numMap = yearObj[descId];
+                        if (typeof numMap === 'object' && !Array.isArray(numMap)) {
+                            for (const num in numMap) {
+                                const entry = numMap[num];
+                                if (entry.filePath) {
+                                    let path = entry.filePath.trim().replace(/\\/g, '/');
+                                    if (path.toLowerCase().startsWith(baseClean.toLowerCase())) {
+                                        const relative = path.substring(baseClean.length);
+                                        if (relative) { entry.filePath = relative;
+                                            count++; }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                if (count === 0) { showToast('No absolute paths found.', 'info'); } else {
+                    saveDataToServer(appData);
+                    refreshAll();
+                    showToast(`Converted ${count} path(s) to relative.`, 'success');
+                }
+            }
+
+            document.getElementById('applyFindReplaceBtn').addEventListener('click', function() {
+                const find = document.getElementById('batchFind').value;
+                const replace = document.getElementById('batchReplace').value;
+                applyFindReplace(find, replace);
+            });
+
+            document.getElementById('prependBaseBtn').addEventListener('click', prependBaseToRelative);
+            document.getElementById('convertAbsoluteToRelativeBtn').addEventListener('click', convertAbsoluteToRelative);
+
+            // =============================================================
+            // EXPORT / IMPORT
+            // =============================================================
+
+            function exportData() {
+                const json = JSON.stringify(appData, null, 2);
+                const blob = new Blob([json], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `circular_data_backup_${new Date().toISOString().slice(0,10)}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast('Data exported successfully.', 'success');
+            }
+
+            function importData(file) {
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    try {
+                        const imported = JSON.parse(e.target.result);
+                        if (!imported.years || !imported.descriptions || !imported.circulars) {
+                            showToast('Invalid data file.', 'error');
+                            return;
+                        }
+                        if (!imported.files) imported.files = {};
+                        if (!imported.notes) imported.notes = {};
+                        if (!imported.basePath) imported.basePath = '';
+                        imported.years.forEach(y => {
+                            if (!imported.circulars[y]) imported.circulars[y] = {};
+                            if (!imported.files[y]) imported.files[y] = {};
+                        });
+                        let totalCirculars = 0;
+                        imported.years.forEach(y => { totalCirculars += Object.keys(imported.circulars[y] || {}).length; });
+                        if (!confirm(`Replace ALL data?\n\nImported: ${imported.descriptions.length} descriptions, ${imported.years.length} years, ${totalCirculars} entries.`)) return;
+                        await saveDataToServer(imported);
+                        refreshAll();
+                        showToast(`Data imported successfully!`, 'success');
+                    } catch (err) {
+                        showToast('Error reading file: ' + err.message, 'error');
+                    }
+                };
+                reader.readAsText(file);
+            }
+
+            document.getElementById('exportDataBtn').addEventListener('click', exportData);
+            document.getElementById('importDataBtn').addEventListener('click', function() {
+                document.getElementById('importFileInput').click();
+            });
+            document.getElementById('importFileInput').addEventListener('change', function(e) {
+                if (this.files.length > 0) { importData(this.files[0]);
+                    this.value = ''; }
+            });
+
+            // =============================================================
+            // RESET
+            // =============================================================
+
+            window.resetAllData = async function() {
+                if (!confirm('⚠️ This will delete ALL data and restore defaults. Are you sure?')) return;
+                try {
+                    const fresh = JSON.parse(JSON.stringify(DEFAULT_DATA));
+                    await saveDataToServer(fresh);
+                    refreshAll();
+                    showToast('Data reset to default.', 'success');
+                } catch (e) { showToast('Error resetting data: ' + e.message, 'error'); }
+            };
+
+            // =============================================================
+            // REFRESH ALL
+            // =============================================================
+
+            function refreshAll() {
+                const search = document.getElementById('searchInput').value;
+                const year = getActiveYear();
+                const cat = getActiveCategory();
+                renderTable(search, year, cat);
+                renderYearFilter(year);
+                renderYearList();
+                renderEntriesList();
+                populateYearSelect();
+                loadBasePath();
+            }
+
+            // =============================================================
+            // POPULATE YEAR SELECT
+            // =============================================================
+
+            function populateYearSelect() {
+                const select = document.getElementById('addYear');
+                const currentVal = select.value;
+                select.innerHTML = '';
+                (appData.years || []).forEach(y => {
+                    const opt = document.createElement('option');
+                    opt.value = y;
+                    opt.textContent = y;
+                    select.appendChild(opt);
+                });
+                if (currentVal && appData.years.includes(currentVal)) select.value = currentVal;
+                else if (appData.years.length > 0) select.value = appData.years[appData.years.length - 1];
+            }
+
+            // =============================================================
+            // ADMIN PANEL TOGGLE
+            // =============================================================
+
+            const adminToggleBtn = document.getElementById('adminToggleBtn');
+            const adminOverlay = document.getElementById('adminOverlay');
+            const closeAdminBtn = document.getElementById('closeAdminBtn');
+
+            function openAdmin() {
+                adminOverlay.classList.add('open');
+                adminToggleBtn.classList.add('active');
+                adminToggleBtn.innerHTML = '<i class="fas fa-times"></i> Close Admin';
+                renderYearList();
+                renderEntriesList();
+                populateYearSelect();
+                loadBasePath();
+            }
+
+            function closeAdmin() {
+                adminOverlay.classList.remove('open');
+                adminToggleBtn.classList.remove('active');
+                adminToggleBtn.innerHTML = '<i class="fas fa-user-shield"></i> Admin Panel';
+            }
+
+            adminToggleBtn.addEventListener('click', function() {
+                if (adminOverlay.classList.contains('open')) closeAdmin();
+                else openAdmin();
+            });
+
+            closeAdminBtn.addEventListener('click', closeAdmin);
+            adminOverlay.addEventListener('click', function(e) {
+                if (e.target === this) closeAdmin();
+            });
+
+            document.querySelectorAll('#adminTabs button').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('#adminTabs button').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    document.querySelectorAll('.admin-tab-pane').forEach(p => p.classList.remove('active'));
+                    document.getElementById(`tab-${this.dataset.tab}`).classList.add('active');
+                });
+            });
+
+            // =============================================================
+            // ADD CIRCULAR FORM
+            // =============================================================
+
+            document.getElementById('addCircularForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                const description = document.getElementById('addDescription').value.trim();
+                const category = document.getElementById('addCategory').value;
+                const year = document.getElementById('addYear').value;
+                const circularNumber = document.getElementById('addCircularNumber').value.trim();
+                const filePathInput = document.getElementById('addFilePath').value.trim();
+                const fileInput = document.getElementById('addFile');
+                const file = fileInput.files[0];
+                const shortNote = document.getElementById('addShortNote').value.trim();
+
+                if (!description || !circularNumber || !year) {
+                    showToast('Please fill in all required fields.', 'error');
+                    return;
+                }
+
+                const data = appData;
+
+                let existingDesc = data.descriptions.find(d =>
+                    d.description.toLowerCase() === description.toLowerCase() &&
+                    d.category === category
+                );
+
+                let descId;
+                if (existingDesc) descId = existingDesc.id;
+                else {
+                    descId = getNextDescId();
+                    data.descriptions.push({ id: descId, description, category });
+                }
+
+                if (!data.years.includes(year)) {
+                    data.years.push(year);
+                    data.years.sort();
+                }
+
+                if (!data.circulars) data.circulars = {};
+                if (!data.circulars[year]) data.circulars[year] = {};
+                if (!data.files) data.files = {};
+                if (!data.files[year]) data.files[year] = {};
+
+                const existingNumbers = data.circulars[year][descId] || '';
+                const newNumbersArray = circularNumber.split(',').map(s => s.trim()).filter(s => s.length > 0);
+                const existingNumbersArray = existingNumbers ? existingNumbers.split(',').map(s => s.trim()).filter(s => s.length > 0) : [];
+                const mergedSet = new Set([...existingNumbersArray, ...newNumbersArray]);
+                const mergedNumbers = Array.from(mergedSet).join(', ');
+                data.circulars[year][descId] = mergedNumbers;
+
+                const allNumbers = Array.from(mergedSet);
+
+                try {
+                    // If file is selected, upload to Supabase
+                    let uploadedUrl = null;
+                    if (file) {
+                        if (!supabaseClient) {
+                            showToast('Supabase not configured. Please set environment variables.', 'error');
+                            return;
+                        }
+                        // Upload once and assign to all numbers
+                        const firstNum = allNumbers[0];
+                        uploadedUrl = await uploadFileToSupabase(file, year, descId, firstNum);
+                        // Assign to all numbers (they'll share the same URL)
+                        allNumbers.forEach(num => {
+                            if (!data.files[year][descId]) data.files[year][descId] = {};
+                            data.files[year][descId][num] = {
+                                fileName: file.name,
+                                fileData: '',
+                                filePath: uploadedUrl
+                            };
+                        });
+                        showToast(`📄 "${file.name}" uploaded to Supabase`, 'success');
+                    } else if (filePathInput) {
+                        // Use the provided file path for all numbers
+                        allNumbers.forEach(num => {
+                            if (!data.files[year][descId]) data.files[year][descId] = {};
+                            data.files[year][descId][num] = {
+                                fileName: '',
+                                fileData: '',
+                                filePath: filePathInput
+                            };
+                        });
+                    }
+
+                    if (!data.notes) data.notes = {};
+                    if (shortNote) data.notes[descId] = shortNote;
+                    else delete data.notes[descId];
+
+                    await saveDataToServer(data);
+                    refreshAll();
+                    showToast('Circular added successfully.', 'success');
+                    document.getElementById('addCircularForm').reset();
+                    document.getElementById('addFileName').textContent = 'No file selected';
+                    document.getElementById('addShortNote').value = '';
+
+                } catch (e) {
+                    showToast('Error adding circular: ' + e.message, 'error');
+                }
+            });
+
+            document.getElementById('addFile').addEventListener('change', function() {
+                document.getElementById('addFileName').textContent = this.files[0] ? this.files[0].name : 'No file selected';
+            });
+
+            // =============================================================
+            // ADD YEAR FORM
+            // =============================================================
+
+            document.getElementById('addYearForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const year = document.getElementById('newYearInput').value.trim();
+                if (!year) { showToast('Please enter a year range.', 'error'); return; }
+                if (!/^\d{2}-\d{2}$/.test(year)) { showToast('Use format: YY-YY (e.g., 27-28).', 'error'); return; }
+                const data = appData;
+                if (data.years.includes(year)) { showToast(`Year ${year} already exists.`, 'warning'); return; }
+                data.years.push(year);
+                data.years.sort();
+                data.circulars[year] = {};
+                data.files[year] = {};
+                try {
+                    await saveDataToServer(data);
+                    refreshAll();
+                    populateYearSelect();
+                    document.getElementById('newYearInput').value = '';
+                    showToast(`Year ${year} added.`, 'success');
+                } catch (e) { showToast('Error adding year: ' + e.message, 'error'); }
+            });
+
+            // =============================================================
+            // SEARCH INPUT
+            // =============================================================
+
+            document.getElementById('searchInput').addEventListener('input', function() {
+                renderTable(this.value, getActiveYear(), getActiveCategory());
+            });
+
+            // =============================================================
+            // LOGIN / LOGOUT
+            // =============================================================
+
+            document.getElementById('loginForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const username = document.getElementById('loginUsername').value.trim();
+                const password = document.getElementById('loginPassword').value.trim();
+                const errorEl = document.getElementById('loginError');
+                if (!username || !password) { errorEl.textContent = 'Please enter both username and password.'; return; }
+                try {
+                    errorEl.textContent = '';
+                    await login(username, password);
+                    showMainApp();
+                    await initializeApp();
+                    showToast('Login successful!', 'success');
+                } catch (err) {
+                    errorEl.textContent = err.message || 'Invalid username or password.';
+                }
+            });
+
+            document.getElementById('logoutBtn').addEventListener('click', async function() {
+                await logout();
+                showToast('Logged out.', 'info');
+            });
+
+            // =============================================================
+            // INITIALIZATION
+            // =============================================================
+
+            async function initializeApp() {
+                try {
+                    // Initialize Supabase
+                    await fetchSupabaseConfig();
+
+                    // Load data
+                    appData = await fetchDataFromServer();
+                    if (!appData.descriptions || appData.descriptions.length === 0) {
+                        appData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+                        await saveDataToServer(appData);
+                    }
+                    // Migrate old file structure if needed
+                    migrateFileData();
+
+                    setupCategoryFilter();
+                    refreshAll();
+
+                    let total = 0;
+                    appData.years.forEach(y => { total += Object.keys(appData.circulars[y] || {}).length; });
+                    document.getElementById('totalCirculars').textContent = total;
+                    document.getElementById('totalYears').textContent = appData.years.length;
+
+                    console.log(`📊 ${appData.descriptions.length} descriptions, ${appData.years.length} years, ${total} circular entries.`);
+                    if (supabaseClient) console.log('☁️ Supabase Storage ready');
+                } catch (e) {
+                    console.error('Error initializing app:', e);
+                    showToast('Error loading data from server.', 'error');
+                }
+            }
+
+            // =============================================================
+            // MIGRATION: old file structure to per-number
+            // =============================================================
+
+            function migrateFileData() {
+                const files = appData.files;
+                let migrated = false;
+                for (const year in files) {
+                    const yearObj = files[year];
+                    for (const descId in yearObj) {
+                        const entry = yearObj[descId];
+                        if (entry && typeof entry === 'object' && !Array.isArray(entry) &&
+                            (entry.filePath !== undefined || entry.fileData !== undefined || entry.fileName !== undefined)) {
+                            const numsStr = appData.circulars[year]?.[descId] || '';
+                            const nums = numsStr.split(',').map(s => s.trim()).filter(s => s);
+                            if (nums.length > 0) {
+                                const newEntry = {};
+                                nums.forEach(num => {
+                                    newEntry[num] = {
+                                        fileName: entry.fileName || '',
+                                        fileData: entry.fileData || '',
+                                        filePath: entry.filePath || ''
+                                    };
+                                });
+                                files[year][descId] = newEntry;
+                                migrated = true;
+                            } else {
+                                delete files[year][descId];
+                                migrated = true;
+                            }
+                        }
+                    }
+                }
+                if (migrated) {
+                    console.log('Migrated file data to per-number structure.');
+                    saveDataToServer(appData);
+                }
+            }
+
+            // =============================================================
+            // START APP
+            // =============================================================
+
+            (async function start() {
+                const hasSession = await checkSession();
+                if (hasSession) {
+                    showMainApp();
+                    await initializeApp();
+                } else {
+                    showLoginScreen();
+                }
+            })();
+
+        })();
+    </script>
+
+</body>
+</html>
