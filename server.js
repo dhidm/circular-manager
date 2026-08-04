@@ -10,9 +10,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // =============================================================
-// GLOBAL ERROR HANDLERS (to prevent crashing)
+// GLOBAL ERROR HANDLERS
 // =============================================================
-
 process.on('uncaughtException', (err) => {
   console.error('❌ Uncaught Exception:', err);
 });
@@ -25,38 +24,45 @@ process.on('unhandledRejection', (reason, promise) => {
 // MIDDLEWARE
 // =============================================================
 
+// CORS – allow the Railway origin dynamically
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production'
-    ? ['https://your-app.onrender.com', 'https://your-app.up.railway.app']
-    : 'http://localhost:3000',
+  origin: true, // allows any origin (you can restrict later)
   credentials: true
 }));
 
 app.use(express.json({ limit: '50mb' }));
 
-// Serve static files – check if public folder exists
+// Static files
 const publicPath = path.join(__dirname, 'public');
 if (!fs.existsSync(publicPath)) {
-  console.error('❌ public folder not found! Creating it...');
+  console.log('📁 Creating public folder...');
   fs.mkdirSync(publicPath, { recursive: true });
 }
 app.use(express.static(publicPath));
 
-// Session
+// Session – secure only in production, but we want it to work on Railway with HTTPS
 app.use(session({
   secret: process.env.SESSION_SECRET || 'dev-secret-key-change-me',
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: 24 * 60 * 60 * 1000
+    secure: process.env.NODE_ENV === 'production' ? true : false,
+    maxAge: 24 * 60 * 60 * 1000,
+    sameSite: 'lax'
   }
 }));
 
 // =============================================================
+// LOGGING MIDDLEWARE (to see all requests)
+// =============================================================
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path} - ${req.session?.userId || 'not authenticated'}`);
+  next();
+});
+
+// =============================================================
 // HEALTH CHECK
 // =============================================================
-
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
@@ -64,7 +70,6 @@ app.get('/api/health', (req, res) => {
 // =============================================================
 // SUPABASE CONFIG
 // =============================================================
-
 app.get('/api/supabase-config', (req, res) => {
   res.json({
     url: process.env.SUPABASE_URL || '',
@@ -76,18 +81,17 @@ app.get('/api/supabase-config', (req, res) => {
 // =============================================================
 // AUTH MIDDLEWARE
 // =============================================================
-
 function isAuthenticated(req, res, next) {
   if (req.session && req.session.userId) {
     return next();
   }
-  res.status(401).json({ error: 'Unauthorized' });
+  console.log('⛔ Unauthorized access attempt to', req.path);
+  res.status(401).json({ error: 'Unauthorized - please login again' });
 }
 
 // =============================================================
 // AUTH ENDPOINTS
 // =============================================================
-
 app.post('/api/login', async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -112,9 +116,16 @@ app.post('/api/login', async (req, res) => {
       req.session.userId = user.id;
       req.session.username = user.username;
 
-      res.json({
-        success: true,
-        user: { id: user.id, username: user.username }
+      // Save session explicitly to ensure it persists
+      req.session.save((err) => {
+        if (err) {
+          console.error('Session save error:', err);
+          return res.status(500).json({ error: 'Failed to save session' });
+        }
+        res.json({
+          success: true,
+          user: { id: user.id, username: user.username }
+        });
       });
     });
   } catch (err) {
@@ -125,9 +136,7 @@ app.post('/api/login', async (req, res) => {
 
 app.post('/api/logout', (req, res) => {
   req.session.destroy((err) => {
-    if (err) {
-      return res.status(500).json({ error: 'Logout failed' });
-    }
+    if (err) return res.status(500).json({ error: 'Logout failed' });
     res.clearCookie('connect.sid');
     res.json({ success: true });
   });
@@ -181,18 +190,16 @@ app.post('/api/change-password', isAuthenticated, async (req, res) => {
 // =============================================================
 // DATA ENDPOINTS
 // =============================================================
-
 app.get('/api/data', isAuthenticated, (req, res) => {
   console.log('🔐 Fetching data for user:', req.session.username);
 
-  // Check database accessibility
+  // First, check DB connectivity
   db.get('SELECT 1', (err) => {
     if (err) {
       console.error('❌ Database not accessible:', err);
       return res.status(500).json({ error: 'Database not accessible: ' + err.message });
     }
 
-    // Proceed with data retrieval
     db.all(`SELECT name FROM years ORDER BY name`, (err, years) => {
       if (err) {
         console.error('Error fetching years:', err);
@@ -360,15 +367,20 @@ app.post('/api/config/basePath', isAuthenticated, (req, res) => {
 });
 
 // =============================================================
+// ERROR HANDLING MIDDLEWARE (catch-all)
+// =============================================================
+app.use((err, req, res, next) => {
+  console.error('❌ Unhandled error:', err);
+  res.status(500).json({ error: 'Internal server error' });
+});
+
+// =============================================================
 // FALLBACK ROUTE – serve index.html
 // =============================================================
-
 app.get('*', (req, res) => {
-  // Skip API routes
   if (req.path.startsWith('/api/')) {
     return res.status(404).json({ error: 'API endpoint not found' });
   }
-  // Serve index.html (or show error if missing)
   const indexPath = path.join(publicPath, 'index.html');
   if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);
@@ -380,20 +392,14 @@ app.get('*', (req, res) => {
 // =============================================================
 // START SERVER
 // =============================================================
-
 const server = app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
   console.log(`🔐 Default login: admin / admin123`);
-  if (process.env.SUPABASE_URL) {
-    console.log(`☁️  Supabase Storage enabled`);
-  } else {
-    console.log(`💾 Supabase not configured – using local file paths`);
-  }
   console.log(`📁 Database path: ${process.env.DB_PATH || path.join(__dirname, 'circular.db')}`);
   console.log(`📂 Public folder: ${publicPath}`);
+  console.log(`☁️  Supabase: ${process.env.SUPABASE_URL ? 'enabled' : 'not configured'}`);
 });
 
-// Graceful shutdown
 server.on('error', (err) => {
   console.error('❌ Server error:', err);
 });
